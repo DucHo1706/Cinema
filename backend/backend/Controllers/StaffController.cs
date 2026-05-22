@@ -1,88 +1,53 @@
-using backend.Enum;
+using backend.DTOs.Requests;
 using backend.Interface.StaffInterface;
-using backend.Model.Staff_Customer;
-using backend.ModelDTO.StaffDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
-namespace backend.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class StaffController(IStaffService staffService) : Controller
+namespace backend.Controllers
 {
-    private readonly IStaffService _staffService = staffService;
-
-    [HttpPost("AddStaff")]
-    [Authorize(Policy = "TheaterManager")]
-    public async Task<IActionResult> addStaff(CreateStaffDTO dtos)
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize(Policy = "Director")] // Chỉ Giám đốc/Admin mới có quyền quản lý nhân sự
+    public class StaffController : ControllerBase
     {
-        var getStaffStatus = await _staffService.addStaff(dtos);
-        if (getStaffStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        private readonly IStaffService _staffService;
+
+        public StaffController(IStaffService staffService)
         {
-            return BadRequest(getStaffStatus);
+            _staffService = staffService;
         }
-        return Ok(getStaffStatus);
-    }
 
-    [HttpPatch("editStaff")]
-    [Authorize(Policy = "TheaterManager")]
-    public async Task<IActionResult> editStaff(string id, EditStaffDTO dtos)
-    {
-        var getEditStaffStatus = await _staffService.EditStaff(id , dtos);
-        if (getEditStaffStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        [HttpGet("GetAllStaffs")]
+        public async Task<IActionResult> GetAllStaffs()
         {
-            return BadRequest(getEditStaffStatus);
+            var result = await _staffService.GetAllStaffsAsync();
+            if (result.IsSuccess == false) return BadRequest(new { message = result.Message });
+            return Ok(new { message = result.Message, data = result.Data });
         }
-        return Ok(getEditStaffStatus);
-    }
 
-    [HttpDelete("DeleteStaff")]
-    [Authorize(Policy = "TheaterManager")]
-    public async Task<IActionResult> deleteStaff(string id)
-    {
-        var getDeleteStaffStatus = await _staffService.DeleteStaff(id);
-        if(getDeleteStaffStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        [HttpPost("CreateStaff")]
+        public async Task<IActionResult> CreateStaff([FromBody] CreateStaffRequestDTO request)
         {
-            return BadRequest(getDeleteStaffStatus);
-        } 
-        return Ok(getDeleteStaffStatus);
-    }
-
-    [HttpGet("GetStaffList")]
-    [Authorize(Policy = "TheaterManager")]
-
-    public IActionResult GetStaffList()
-    {
-        var getStaffList = _staffService.GetStaffListInfo();
-        if (getStaffList.Status.Equals(GenericStatusEnum.Failure.ToString()))
-        {
-            return BadRequest(getStaffList);
+            var result = await _staffService.CreateStaffAsync(request);
+            if (result.IsSuccess == false) return BadRequest(new { message = result.Message });
+            return Ok(new { message = result.Message, data = result.Data });
         }
-        return Ok(getStaffList);
-    }
 
-    [HttpGet("GetStaffByID")]
-    [Authorize(Policy = "TheaterManager")]
-    public IActionResult GetStaffByID(string id)
-    {
-        var getStaffById = _staffService.GetStaffInfo(id);
-        if (getStaffById.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        [HttpPut("UpdateStaff/{userId}")]
+        public async Task<IActionResult> UpdateStaff(string userId, [FromBody] UpdateStaffRequestDTO request)
         {
-            return BadRequest(getStaffById);
+            var result = await _staffService.UpdateStaffAsync(userId, request);
+            if (result.IsSuccess == false) return BadRequest(new { message = result.Message });
+            return Ok(new { message = result.Message });
         }
-        return Ok(getStaffById);
-    }
 
-    [HttpGet("GetRoleList")]
-    [Authorize(Policy = "TheaterManager")]
-    public IActionResult GetRoleList()
-    {
-        var getRoleListStatus = _staffService.getRoles();
-        if (getRoleListStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        [HttpDelete("DeleteStaff/{userId}")]
+        public async Task<IActionResult> DeleteStaff(string userId)
         {
-            return BadRequest(getRoleListStatus);
+            var result = await _staffService.DeleteStaffAsync(userId);
+            if (result.IsSuccess == false) return BadRequest(new { message = result.Message });
+            return Ok(new { message = result.Message });
         }
-        return Ok(getRoleListStatus);
     }
 }

@@ -1,6 +1,6 @@
-using backend.Enum;
 using backend.Interface.CinemaInterface;
-using backend.ModelDTO.CinemaDTOs;
+using backend.DTOs.Requests;
+using backend.DTOs.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,68 +18,63 @@ public class CinemaController : ControllerBase
     }
 
     [HttpGet("getCinemaInfoBookingService")]
-    public async Task<IActionResult> GetCinemaInfoBookingService([FromQuery] string MovieID, [FromQuery] string movieVisualFormatID)
+    public async Task<IActionResult> GetCinemaInfoBookingService([FromQuery] string movieId, [FromQuery] string? visualFormat)
     {
         // Kiểm tra đầu vào cơ bản
-        if (string.IsNullOrEmpty(MovieID) || string.IsNullOrEmpty(movieVisualFormatID))
+        if (string.IsNullOrEmpty(movieId))
         {
-            return BadRequest(new { Status = GenericStatusEnum.Failure.ToString(), message = "MovieID và movieVisualFormatID không được để trống." });
+            return BadRequest(new { message = "MovieID không được để trống." });
         }
 
-        var getStatus = _cinemaService.GetCinemaDetailBooking(MovieID, movieVisualFormatID);
+        var result = await _cinemaService.GetCinemasForBookingAsync(movieId, visualFormat);
         
-        // Kiểm tra phản hồi từ service và trả về kết quả tương ứng
-        if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        if (result.IsSuccess == false)
         {
-            return BadRequest(getStatus); // Có thể là NotFound nếu không tìm thấy, tùy thuộc vào message
+            return NotFound(new { message = result.Message });
         }
-        return Ok(getStatus);
+        return Ok(new { message = result.Message, data = result.Data });
     }
 
     // Thêm rạp chiếu phim mới
     [HttpPost("addCinema")]
     [Authorize(Policy = "FacilitiesManager")]
-    public async Task<IActionResult> AddCinema([FromBody] CreateCinemaDTO cinema)
+    public async Task<IActionResult> AddCinema([FromBody] CreateCinemaRequestDTO request)
     {
-        if (cinema == null)
+        if (request == null)
         {
-            return BadRequest(new { Status = GenericStatusEnum.Failure.ToString(), message = "Dữ liệu rạp chiếu không được để trống." });
+            return BadRequest(new { message = "Dữ liệu rạp chiếu không được để trống." });
         }
 
-        var result = await _cinemaService.AddCinema(cinema);
+        var result = await _cinemaService.AddCinemaAsync(request);
 
-        if (result.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        if (result.IsSuccess == false)
         {
-            return BadRequest(result); // Trả về lỗi nếu service báo thất bại
+            return BadRequest(new { message = result.Message });
         }
-        return Ok(result); // Trả về thành công
+        return Ok(new { message = result.Message, data = result.Data });
     }
 
     // Chỉnh sửa thông tin rạp chiếu phim
     [HttpPut("editCinema/{cinemaId}")]
     [Authorize(Policy = "FacilitiesManager")]
-    public async Task<IActionResult> EditCinema(string cinemaId, [FromBody] EditCinemaDTO cinema)
+    public async Task<IActionResult> EditCinema(string cinemaId, [FromBody] UpdateCinemaRequestDTO request)
     {
-        // Kiểm tra ID rạp và DTO đầu vào
         if (string.IsNullOrEmpty(cinemaId))
         {
-            return BadRequest(new { Status = GenericStatusEnum.Failure.ToString(), message = "ID rạp không được để trống." });
+            return BadRequest(new { message = "ID rạp không được để trống." });
         }
-        if (cinema == null)
+        if (request == null)
         {
-            return BadRequest(new { Status = GenericStatusEnum.Failure.ToString(), message = "Dữ liệu rạp chiếu không được để trống." });
+            return BadRequest(new { message = "Dữ liệu rạp chiếu không được để trống." });
         }
-        // Có thể thêm các kiểm tra validation khác cho cinema DTO ở đây
 
-        var result = await _cinemaService.EditCinema(cinemaId, cinema);
+        var result = await _cinemaService.EditCinemaAsync(cinemaId, request);
 
-        if (result.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        if (result.IsSuccess == false)
         {
-            // Trả về BadRequest cho các lỗi nghiệp vụ hoặc lỗi không tìm thấy
-            // Tùy thuộc vào message từ service mà bạn có thể trả về NotFound() nếu lỗi là "Không tìm thấy rạp"
-            return BadRequest(result);
+            return BadRequest(new { message = result.Message });
         }
-        return Ok(result);
+        return Ok(new { message = result.Message });
     }
 
     // Xóa rạp chiếu phim (soft delete)
@@ -89,30 +84,29 @@ public class CinemaController : ControllerBase
     {
         if (string.IsNullOrEmpty(cinemaId))
         {
-            return BadRequest(new { Status = GenericStatusEnum.Failure.ToString(), message = "ID rạp không được để trống." });
+            return BadRequest(new { message = "ID rạp không được để trống." });
         }
 
-        var result = await _cinemaService.DeleteCinema(cinemaId);
+        var result = await _cinemaService.DeleteCinemaAsync(cinemaId);
 
-        if (result.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        if (result.IsSuccess == false)
         {
-            // Tương tự, tùy thuộc vào message từ service mà có thể trả về NotFound()
-            return BadRequest(result);
+            return BadRequest(new { message = result.Message });
         }
-        return Ok(result);
+        return Ok(new { message = result.Message });
     }
     
     // Lấy danh sách rạp chiếu phim
     [HttpGet("getCinemaList")]
     public async Task<IActionResult> GetCinemaList()
     {
-        var getStatus = _cinemaService.GetCinemaList();
+        var result = await _cinemaService.GetCinemaListAsync();
 
-        if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        if (result.IsSuccess == false)
         {
-            return BadRequest(getStatus);
+            return BadRequest(new { message = result.Message });
         }
-        return Ok(getStatus);
+        return Ok(new { message = result.Message, data = result.Data });
     }
 
     // Lấy chi tiết rạp chiếu phim theo ID
@@ -121,17 +115,15 @@ public class CinemaController : ControllerBase
     {
         if (string.IsNullOrEmpty(cinemaId))
         {
-            return BadRequest(new { Status = GenericStatusEnum.Failure.ToString(), message = "ID rạp không được để trống." });
+            return BadRequest(new { message = "ID rạp không được để trống." });
         }
 
-        var getStatus = _cinemaService.GetCinemaDetail(cinemaId);
+        var result = await _cinemaService.GetCinemaDetailAsync(cinemaId);
 
-        if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        if (result.IsSuccess == false)
         {
-            // Nếu không tìm thấy, có thể trả về NotFound thay vì BadRequest
-            return NotFound(getStatus); 
+            return NotFound(new { message = result.Message }); 
         }
-        
-        return Ok(getStatus);
+        return Ok(new { message = result.Message, data = result.Data });
     }
 }

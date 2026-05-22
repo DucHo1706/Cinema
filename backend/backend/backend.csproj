@@ -5,7 +5,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>d5aa1094-ff8a-4558-84d2-47a259df2c61</UserSecretsId>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,15 +25,19 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
     <PackageReference Include="QuestPDF" Version="2025.7.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="VNPAY.NET" Version="8.5.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DTOs\Responses\" />
+    <Folder Include="DTOs\Requests\" />
+    <Folder Include="Interface\GenericsInterface\" />
+    <Folder Include="Interface\RevenueInterface\" />
+    <Folder Include="Interface\StaffInterface\" />
     <Folder Include="Interface\StaffOrderInterface\" />
-    <Folder Include="ModelDTO\PaginiationDTO\Request\" />
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

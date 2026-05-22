@@ -1,757 +1,262 @@
 ﻿using backend.Data;
-using backend.Enum;
+using backend.DTOs.Requests;
+using backend.DTOs.Responses;
 using backend.Interface.CloudinaryInterface;
-using backend.Interface.GenericsInterface;
 using backend.Interface.MovieInterface;
-using backend.Model.MinimumAge;
-using backend.Model.Movie;
-using backend.ModelDTO.GenericRespond;
-using backend.ModelDTO.MoviesDTO.MovieRequest;
-using backend.ModelDTO.MoviesDTO.MovieRespond;
-using backend.ModelDTO.PaginiationDTO.Respond;
-using Microsoft.AspNetCore.Mvc;
+using backend.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Data.Common;
-using System.Globalization;
+using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices.JavaScript;
-using System.Transactions;
-using backend.ModelDTO.MoviesDTO;
+using System.Threading.Tasks;
 
 namespace backend.Services.MovieServices
 {
-    public class movieServices : IMovieService
+    public class MovieService : IMovieService
     {
-        private readonly DataContext _dataContext;
+        private readonly DataContext _context;
+        private readonly ICloudinaryServices _cloudinary;
 
-        private readonly ICloudinaryServices cloudinaryServices;
-
-        public movieServices(DataContext dataContext, ICloudinaryServices cloudinaryServices)
+        public MovieService(DataContext context, ICloudinaryServices cloudinary)
         {
-            _dataContext = dataContext;
-            this.cloudinaryServices = cloudinaryServices;
+            _context = context;
+            _cloudinary = cloudinary;
         }
 
-        public async Task<GenericRespondDTOs> add([FromForm] MovieRequestDTO movieRequestDTO)
+        public async Task<(bool IsSuccess, string Message, object? Data)> CreateMovieAsync(CreateMovieRequestDTO request)
         {
-            if (_dataContext.movieInformation.Any(x => x.movieName == movieRequestDTO.movieName))
+            var isExist = await _context.Movies.AnyAsync(m => m.Title.ToLower() == request.Title.ToLower() && m.IsDeleted == false);
+            if (isExist == true)
             {
-                return new GenericRespondDTOs()
-                {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Lỗi Tên phim đã tồn tại"
-                };
-            }else if (_dataContext.movieInformation.Any(x => x.movieTrailerUrl.Equals(movieRequestDTO.movieTrailerUrl)))
-            {
-                return new GenericRespondDTOs()
-                {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Lỗi Trailer đã tồn tại"
-                };
-            }
-            if (movieRequestDTO != null)
-            {
-                // Generate New GUID 
-                // 
-                await using var transaction = await _dataContext.Database.BeginTransactionAsync();
-                try
-                {
-                    var movieID = Guid.NewGuid();
-
-                    var getFullUploadPath = await cloudinaryServices.uploadFileToCloudinary(movieRequestDTO.movieImage);
-                    var newMovie = new movieInformation()
-                    {
-                        movieId = movieID.ToString(),
-                        movieName = movieRequestDTO.movieName,
-                        movieImage = getFullUploadPath,
-                        movieDescription = movieRequestDTO.movieDescription,
-                        movieDirector = movieRequestDTO.movieDirector,
-                        movieTrailerUrl = movieRequestDTO.movieTrailerUrl,
-                        movieDuration = movieRequestDTO.movieDuration,
-                        languageId = movieRequestDTO.languageId,
-                        minimumAgeID = movieRequestDTO.minimumAgeID,
-                        ReleaseDate = movieRequestDTO.releaseDate,
-                    };
-
-                    await _dataContext.movieInformation.AddAsync(newMovie);
-
-                    var newMovieGenreArray = new List<movieGenreInformation>();
-
-                    foreach (var movieGenreID in movieRequestDTO.movieGenreList)
-                    {
-                        newMovieGenreArray.Add(new movieGenreInformation()
-                        {
-                            movieGenreId = movieGenreID,
-                            movieId = movieID.ToString()
-                        });
-                    }
-
-                    await _dataContext.movieGenreInformation.AddRangeAsync(newMovieGenreArray);
-
-                    // Add Thể loại hình ảnh của phim
-
-                    var newMovieVisualArray = new List<movieVisualFormatDetail>();
-
-                    foreach (var movieVisualFormatID in movieRequestDTO.visualFormatList)
-                    {
-                        newMovieVisualArray.Add(new movieVisualFormatDetail()
-                        {
-                            movieId = movieID.ToString(),
-                            movieVisualFormatId = movieVisualFormatID,
-                        });
-                    }
-
-                    await _dataContext.movieVisualFormatDetails.AddRangeAsync(newMovieVisualArray);
-
-                    await _dataContext.SaveChangesAsync();
-                    await transaction.CommitAsync();
-                    return new GenericRespondDTOs()
-                    {
-                        Status = GenericStatusEnum.Success.ToString(),
-                        message = "Thêm thành công"
-                    };
-                }
-                catch (DbException db)
-                {
-                    await transaction.RollbackAsync();
-                    if (db.Message.ToLower().Trim().Replace(" " , "").Contains("movieimage"))
-                    {
-                        return new GenericRespondDTOs()
-                        {
-                            Status = GenericStatusEnum.Failure.ToString(),
-                            message = "Lỗi ảnh đã tồn tại"
-                        };
-                    }
-
-                    return new GenericRespondDTOs()
-                    {
-                        Status = GenericStatusEnum.Failure.ToString(),
-                        message = "Lỗi  DB"
-                    };
-                }
-                catch (Exception e)
-                {
-                    await transaction.RollbackAsync();
-                    if (e.Message.ToLower().Trim().Replace(" " , "").Contains("movieimage"))
-                    {
-                        return new GenericRespondDTOs()
-                        {
-                            Status = GenericStatusEnum.Failure.ToString(),
-                            message = "Lỗi ảnh đã tồn tại"
-                        };
-                    }
-
-                    return new GenericRespondDTOs()
-                    {
-                        Status = GenericStatusEnum.Failure.ToString(),
-                        message = "Lỗi hệ thống"
-                    };
-                }
+                return (false, "Tên phim đã tồn tại", null);
             }
 
-            return new GenericRespondDTOs()
+            string posterUrl = "";
+            if (request.PosterFile != null)
             {
-                Status = GenericStatusEnum.Failure.ToString(),
-                message = "Lỗi nhập không đầy đủ thông tin"
+                posterUrl = await _cloudinary.uploadFileToCloudinary(request.PosterFile);
+            }
+
+            var movie = new Movie
+            {
+                Title = request.Title,
+                Description = request.Description,
+                Director = request.Director,
+                Cast = request.Cast,
+                DurationMinutes = request.DurationMinutes,
+                ReleaseDate = request.ReleaseDate,
+                TrailerUrl = request.TrailerUrl,
+                Language = request.Language,
+                AgeRating = request.AgeRating,
+                PosterUrl = posterUrl
             };
+
+            await _context.Movies.AddAsync(movie);
+
+            if (request.GenreIds != null && request.GenreIds.Count > 0)
+            {
+                foreach (var genreId in request.GenreIds)
+                {
+                    await _context.MovieGenres.AddAsync(new MovieGenre { MovieId = movie.MovieId, GenreId = genreId });
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return (true, "Thêm phim thành công", movie.MovieId);
         }
 
-        // Không xóa phim chỉ set bằng isDelete = true thôi tùy lúc
-        public async Task<GenericRespondDTOs> remove(string Id)
+        public async Task<(bool IsSuccess, string Message, object? Data)> UpdateMovieAsync(string movieId, UpdateMovieRequestDTO request)
         {
-            if (String.IsNullOrEmpty(Id))
+            var movie = await _context.Movies.Include(m => m.MovieGenres).FirstOrDefaultAsync(m => m.MovieId == movieId && m.IsDeleted == false);
+            if (movie == null)
             {
-                return new GenericRespondDTOs
-                {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Bạn chưa nhập ID"
-                };
+                return (false, "Không tìm thấy phim", null);
             }
 
-            var findMovie = await _dataContext.movieInformation.FindAsync(Id);
-            var findMovieGenres = _dataContext.movieGenreInformation.Where(genre => genre.movieId == Id).ToList();
-            var findMovieVisualFormat = _dataContext
-                .movieVisualFormatDetails.Where(visualFormat => visualFormat.movieId == Id).ToList();
-            if (findMovie == null && !findMovieGenres.Any() && !findMovieVisualFormat.Any())
+            if (string.IsNullOrEmpty(request.Title) == false)
             {
-                return new GenericRespondDTOs()
+                var titleExists = await _context.Movies.AnyAsync(m => m.Title.ToLower() == request.Title.ToLower() && m.MovieId != movieId && m.IsDeleted == false);
+                if (titleExists)
                 {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Không tìm thấy phim"
-                };
+                    return (false, "Tên phim này đã được sử dụng", null);
+                }
+                movie.Title = request.Title;
             }
 
-            var timKiemLichChieuLienQuan =
-                await _dataContext.movieSchedule.Where
-                    (x => x.movieId.Equals(Id)).ToListAsync();
-
-            await using var transaction = await _dataContext.Database.BeginTransactionAsync();
-            try
+            if (request.PosterFile != null)
             {
-                if (!timKiemLichChieuLienQuan.Any())
-                {
-                    _dataContext.movieGenreInformation.RemoveRange(findMovieGenres);
-                    _dataContext.movieVisualFormatDetails.RemoveRange(findMovieVisualFormat);
-                    _dataContext.movieInformation.Remove(findMovie);
-                    await _dataContext.SaveChangesAsync();
-                    await transaction.CommitAsync();
-                    return new GenericRespondDTOs()
-                    {
-                        Status = GenericStatusEnum.Success.ToString(),
-                        message = "Đã xóa thành công"
-                    };
-                }
-
-                var findTicket = await _dataContext
-                    .TicketOrderDetail.Where(order =>
-                        timKiemLichChieuLienQuan.Select(x => x.movieScheduleId).Contains(order.movieScheduleID))
-                    .ToListAsync();
-                if (!findTicket.Any())
-                {
-                    _dataContext.movieGenreInformation.RemoveRange(findMovieGenres);
-                    _dataContext.movieVisualFormatDetails.RemoveRange(findMovieVisualFormat);
-                    _dataContext.movieInformation.Remove(findMovie);
-                    _dataContext.movieSchedule.RemoveRange(timKiemLichChieuLienQuan);
-                    await _dataContext.SaveChangesAsync();
-                    await transaction.CommitAsync();
-                    return new GenericRespondDTOs()
-                    {
-                        Status = GenericStatusEnum.Success.ToString(),
-                        message = "Đã xóa thành công"
-                    };
-                }
-
-                var timKiemLichChieuDaChieu =
-                    timKiemLichChieuLienQuan.ToList();
-
-                // Tầng số 1 : Kiểm tra để xóa mềm  
-
-                // Case chuaw chieu
-                if (timKiemLichChieuDaChieu.Any(x => !x.IsDelete))
-                {
-
-                    // Tiếnhanfnhf tìm kiếm
-                    var timKiemLichChuaChieu =
-                        timKiemLichChieuLienQuan.Where(x => x.IsDelete == false).ToList();
-                    // Tiep Tuc Tim Kiem Order Liên quan
-                    var findUnshowedTicket =
-                        findTicket
-                            .Where(x => timKiemLichChuaChieu
-                                .Select(x => x.movieScheduleId).Contains(x.movieScheduleID)).ToList();
-                    var findOrder =
-                        _dataContext.Order
-                            .Where(order => findUnshowedTicket.Select(x => x.orderId).Contains(order.orderId)).ToList();
-
-                    // Case 1 : Nếu phim chưa chiếu mà đã có người thanh toán thành công thì Khoong cho xoa
-                    if (findOrder.Any(x => !x.PaymentStatus.Equals(PaymentStatus.PaymentFailure.ToString())))
-                    {
-                        return new GenericRespondDTOs()
-                        {
-                            Status = GenericStatusEnum.Failure.ToString(),
-                            message = "Loi Da co nguoi Dat Ve Khong The Xoa"
-                        };
-
-                    }
-                    else if (findOrder.Any(x => x.PaymentStatus.Equals(PaymentStatus.PaymentFailure.ToString())))
-                    {
-                        // Case 2 : Nếu phim chưa chiếu mà thanh toán thât bại thfi xóa cứng
-                        // Neeus thanh toan that bai
-                        findOrder = findOrder
-                            .Where(x => x.PaymentStatus.Equals(PaymentStatus.PaymentFailure.ToString())).ToList();
-                        _dataContext.movieSchedule.RemoveRange(timKiemLichChuaChieu);
-                        _dataContext.TicketOrderDetail.RemoveRange(findUnshowedTicket);
-                        _dataContext.Order.RemoveRange(findOrder);
-                        _dataContext.movieInformation.Remove(findMovie);
-                        _dataContext.movieGenreInformation.RemoveRange(findMovieGenres);
-                        _dataContext.movieVisualFormatDetails.RemoveRange(findMovieVisualFormat);
-
-                        await _dataContext.SaveChangesAsync();
-                        await transaction.CommitAsync();
-
-                        return new GenericRespondDTOs()
-                        {
-                            Status = GenericStatusEnum.Success.ToString(),
-                            message = "Xoóa thành công"
-                        };
-                    }
-                }
-                else if (timKiemLichChieuDaChieu.Any())
-                {
-                    // Tìm kiếm case đã chiếu
-                    timKiemLichChieuDaChieu = timKiemLichChieuDaChieu.Where(x => x.IsDelete == true).ToList();
-                    var findShowedTicket =
-                        findTicket
-                            .Where(x => timKiemLichChieuDaChieu
-                                .Select(x => x.movieScheduleId).Contains(x.movieScheduleID)).ToList();
-                    var findOrder =
-                        _dataContext.Order
-                            .Where(order => findShowedTicket.Select(x => x.orderId).Contains(order.orderId)
-                                            && order.PaymentStatus.Equals(PaymentStatus.PaymentFailure.ToString()))
-                            .ToList();
-                    // Case 1 : Nếu phim đã chiếu mà đã có người thanh toán thành công thì tiến hành xóa mềm
-                    if (!findOrder.Any())
-                    {
-                        var findTicketContaintOrder = _dataContext.TicketOrderDetail
-                            .Where(order => findOrder.Select(x => x.orderId).Contains(order.orderId)).ToList();
-                        _dataContext.TicketOrderDetail.RemoveRange(findTicketContaintOrder);
-                        // Xoas những cái thông tin thanh toán thất bại cho đỡ nănng Dâtabase
-                        _dataContext.Order.RemoveRange(findOrder);
-                        // Tien Hanh Update
-                        findMovie.isDelete = true;
-                        _dataContext.movieInformation.Update(findMovie);
-                        await _dataContext.SaveChangesAsync();
-                        await transaction.CommitAsync();
-
-                        return new GenericRespondDTOs()
-                        {
-                            Status = GenericStatusEnum.Success.ToString(),
-                            message = "Xoóa thành công"
-                        };
-
-                    }
-                    else if (findOrder.Any())
-                    {
-                        // Case 2 : Nếu phim đã chiếu mà thanh toán thât bại thfi xóa cứng
-                        // Neeus thanh toan that bai
-                        _dataContext.movieSchedule.RemoveRange(timKiemLichChieuDaChieu);
-                        _dataContext.TicketOrderDetail.RemoveRange(findShowedTicket);
-                        _dataContext.Order.RemoveRange(findOrder);
-                        _dataContext.movieInformation.Remove(findMovie);
-                        _dataContext.movieGenreInformation.RemoveRange(findMovieGenres);
-                        _dataContext.movieVisualFormatDetails.RemoveRange(findMovieVisualFormat);
-
-                        await _dataContext.SaveChangesAsync();
-                        await transaction.CommitAsync();
-
-                        return new GenericRespondDTOs()
-                        {
-                            Status = GenericStatusEnum.Success.ToString(),
-                            message = "Xoóa thành công"
-                        };
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                await transaction.RollbackAsync();
-                return new GenericRespondDTOs()
-                {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Không thể xóa được do lỗi"
-                };
+                movie.PosterUrl = await _cloudinary.uploadFileToCloudinary(request.PosterFile);
             }
 
-            return new GenericRespondDTOs()
+            if (string.IsNullOrEmpty(request.Description) == false) movie.Description = request.Description;
+            if (string.IsNullOrEmpty(request.Director) == false) movie.Director = request.Director;
+            if (string.IsNullOrEmpty(request.Cast) == false) movie.Cast = request.Cast;
+            if (request.DurationMinutes.HasValue) movie.DurationMinutes = request.DurationMinutes.Value;
+            if (request.ReleaseDate.HasValue) movie.ReleaseDate = request.ReleaseDate.Value;
+            if (string.IsNullOrEmpty(request.TrailerUrl) == false) movie.TrailerUrl = request.TrailerUrl;
+            if (string.IsNullOrEmpty(request.Language) == false) movie.Language = request.Language;
+            if (string.IsNullOrEmpty(request.AgeRating) == false) movie.AgeRating = request.AgeRating;
+
+            if (request.GenreIds != null && request.GenreIds.Count > 0)
             {
-                Status = GenericStatusEnum.Failure.ToString(),
-                message = "Không thể xóa được do lỗi"
+                _context.MovieGenres.RemoveRange(movie.MovieGenres);
+                foreach (var genreId in request.GenreIds)
+                {
+                    await _context.MovieGenres.AddAsync(new MovieGenre { MovieId = movie.MovieId, GenreId = genreId });
+                }
+            }
+
+            _context.Movies.Update(movie);
+            await _context.SaveChangesAsync();
+
+            return (true, "Sửa thông tin phim thành công", null);
+        }
+
+        // Chỉ việc kiểm tra nếu có ai mua vé, thì xóa mềm. Nếu chưa ai mua, xóa cứng!
+        public async Task<(bool IsSuccess, string Message, object? Data)> DeleteMovieAsync(string movieId)
+        {
+            var movie = await _context.Movies.FindAsync(movieId);
+            if (movie == null || movie.IsDeleted)
+            {
+                return (false, "Không tìm thấy phim", null);
+            }
+
+            bool hasTickets = await _context.Tickets.AnyAsync(t => t.Showtime.MovieId == movieId);
+            
+            if (hasTickets == true)
+            {
+                movie.IsDeleted = true;
+                _context.Movies.Update(movie);
+            }
+            else
+            {
+                _context.Movies.Remove(movie);
+            }
+
+            await _context.SaveChangesAsync();
+            return (true, "Xóa phim thành công", null);
+        }
+
+        public async Task<(bool IsSuccess, string Message, object? Data)> GetMovieDetailAsync(string movieId)
+        {
+            var movie = await _context.Movies
+                .Include(m => m.MovieGenres)
+                .ThenInclude(mg => mg.Genre)
+                .FirstOrDefaultAsync(m => m.MovieId == movieId && m.IsDeleted == false);
+                
+            if (movie == null)
+            {
+                return (false, "Không tìm thấy phim", null);
+            }
+
+            var dto = new MovieResponseDTO
+            {
+                MovieId = movie.MovieId,
+                Title = movie.Title,
+                Description = movie.Description,
+                Director = movie.Director,
+                Cast = movie.Cast,
+                DurationMinutes = movie.DurationMinutes,
+                ReleaseDate = movie.ReleaseDate,
+                PosterUrl = movie.PosterUrl,
+                TrailerUrl = movie.TrailerUrl,
+                Language = movie.Language,
+                AgeRating = movie.AgeRating,
+                Genres = movie.MovieGenres.Select(mg => mg.Genre.Name).ToList()
             };
+
+            return (true, "Lấy thông tin phim thành công", dto);
         }
 
-
-        public GenericRespondWithObjectDTO<movieGetDetailResponseDTO> getMovieDetail(string movieID)
+        public async Task<(bool IsSuccess, string Message, object? Data)> GetMoviesPaginationAsync(int page, int pageSize = 9)
         {
-            var findMovieInfo = _dataContext.movieInformation
-                .Where(x => x.movieId.Equals(movieID) && !x.isDelete)
-                .Include(x => x.Language)
-                .Include(x => x.minimumAge)
-                .FirstOrDefault();
-            if (findMovieInfo != null)
-            {
-                // Tiến hành lọc thông tin
-                var findMovieVisualFormat = _dataContext.movieVisualFormatDetails
-                    .Where(x => x.movieId == movieID)
-                    .Include(x => x.movieVisualFormat)
-                    .Select(x => new MovieVisualFormatGetDetailResponseDTO()
-                    {
-                        movieVisualFormatId = x.movieVisualFormat.movieVisualFormatId,
-                        movieVisualFormatName = x.movieVisualFormat.movieVisualFormatName,
-                    }).ToList();
+            var totalCount = await _context.Movies.CountAsync(m => m.IsDeleted == false);
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-                var findMovieGenre = _dataContext.movieGenreInformation.Where(x => x.movieId == movieID)
-                    .Include(x => x.movieGenre)
-                    .Select(x => new MovieGenreGetDetailResponseDTO()
-                    {
-                        movieGenreId = x.movieGenre.movieGenreId,
-                        movieGenreName = x.movieGenre.movieGenreName,
-                    }).ToList();
-                Dictionary<string, string> MovieLanguage = new Dictionary<string, string>();
-                Dictionary<string, string> MovieMiniumAge = new Dictionary<string, string>();
-
-                MovieLanguage.Add(findMovieInfo.languageId, findMovieInfo.Language.languageDetail);
-                MovieMiniumAge.Add(findMovieInfo.minimumAgeID, findMovieInfo.minimumAge.minimumAgeDescription);
-                return new GenericRespondWithObjectDTO<movieGetDetailResponseDTO>()
+            var movies = await _context.Movies
+                .Include(m => m.MovieGenres).ThenInclude(mg => mg.Genre)
+                .Where(m => m.IsDeleted == false)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(m => new MovieResponseDTO
                 {
-
-                    Status = GenericStatusEnum.Success.ToString(),
-                    message = "Tìm chi tiết phim thành công",
-                    data = new movieGetDetailResponseDTO()
-                    {
-                        movieId = movieID,
-                        movieVisualFormat = findMovieVisualFormat,
-                        MovieLanguage = MovieLanguage,
-                        MovieMinimumAge = MovieMiniumAge,
-                        movieGenre = findMovieGenre,
-                        movieDirector = findMovieInfo.movieDirector,
-                        movieImage = findMovieInfo.movieImage,
-                        movieTrailerUrl = findMovieInfo.movieTrailerUrl,
-                        ReleaseDate = findMovieInfo.ReleaseDate,
-                        movieName = findMovieInfo.movieName,
-                        movieActor = findMovieInfo.movieActor,
-                        movieDescription = findMovieInfo.movieDescription,
-                        movieDuration = findMovieInfo.movieDuration,
-                    }
-                };
-            }
-
-            return new GenericRespondWithObjectDTO<movieGetDetailResponseDTO>()
-            {
-                Status = GenericStatusEnum.Failure.ToString(),
-                message = "Không tìm thấy phim , vui lòng thử lại sau"
-            };
-        }
-
-
-        public async Task<GenericRespondDTOs> edit(string movieID, MovieEditRequestDTO dtos)
-        {
-            if (_dataContext.movieInformation.Any(x =>
-                    !x.movieId.Equals(movieID) && x.movieName.Equals(dtos.movieName)))
-            {
-                return new GenericRespondDTOs()
-                {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Lỗi Tên Phim đã tồn tại"
-                };
-            }else if (_dataContext.movieInformation.Any(x =>
-                          !x.movieId.Equals(movieID) && x.movieTrailerUrl.Equals(dtos.movieTrailerUrl)))
-            {
-                return new GenericRespondDTOs()
-                {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Lỗi Trailer Phim đã tồn tại"
-                };
-            }
-            // Tìm kiếm các trường dữ liệu liên quan
-            var findLanguageAndMiniumAgeAndMovieInfo = _dataContext.movieInformation.Where
-                    (x => x.movieId.Equals(movieID) && !x.isDelete)
-                .Include(x => x.Language)
-                .Include(x => x.minimumAge)
-                .FirstOrDefault();
-
-            if (findLanguageAndMiniumAgeAndMovieInfo != null)
-            {
-
-                var FindMovieScheduleObject = _dataContext.movieSchedule.Where(x =>
-                    x.movieId.Equals(findLanguageAndMiniumAgeAndMovieInfo.movieId) && !x.IsDelete).ToList();
-                var FindOrder = _dataContext.TicketOrderDetail.Any(x =>
-                    x.movieScheduleID.Equals(FindMovieScheduleObject.Select(x => x.movieScheduleId)));
-                if (!FindOrder)
-                {
-                    var findGenreFilm = _dataContext.movieGenreInformation
-                        .Where(x => x.movieId.Equals(movieID));
-
-
-                    var findMovieVisualFormatID = _dataContext.movieVisualFormatDetails
-                        .Where(x => x.movieId.Equals(movieID));
-
-                    string movieName = string.Empty;
-                    string minumAgeID = string.Empty;
-                    string movieImage = string.Empty;
-                    string movieDescription = string.Empty;
-                    string movieDirector = string.Empty;
-                    string movieActor = string.Empty;
-                    string trailerURL = string.Empty;
-                    int movieDuration = 0;
-                    DateTime relaseDate = new DateTime();
-                    string languageID = string.Empty;
-
-                    // Using ternary operator for strings
-                    var Transition = await _dataContext.Database.BeginTransactionAsync();
-                    try
-                    {
-                        movieName = string.IsNullOrEmpty(dtos.movieName)
-                            ? findLanguageAndMiniumAgeAndMovieInfo.movieName
-                            : dtos.movieName;
-                        minumAgeID = string.IsNullOrEmpty(dtos.minimumAgeID)
-                            ? findLanguageAndMiniumAgeAndMovieInfo.minimumAgeID
-                            : dtos.minimumAgeID;
-                        movieDescription = string.IsNullOrEmpty(dtos.movieDescription)
-                            ? findLanguageAndMiniumAgeAndMovieInfo.movieDescription
-                            : dtos.movieDescription;
-                        movieDirector = string.IsNullOrEmpty(dtos.movieDirector)
-                            ? findLanguageAndMiniumAgeAndMovieInfo.movieDirector
-                            : dtos.movieDirector;
-                        movieActor = string.IsNullOrEmpty(dtos.movieActor)
-                            ? findLanguageAndMiniumAgeAndMovieInfo.movieActor
-                            : dtos.movieActor;
-                        trailerURL = string.IsNullOrEmpty(dtos.movieTrailerUrl)
-                            ? findLanguageAndMiniumAgeAndMovieInfo.movieTrailerUrl
-                            : dtos.movieTrailerUrl;
-                        languageID = string.IsNullOrEmpty(dtos.languageId)
-                            ? findLanguageAndMiniumAgeAndMovieInfo.languageId
-                            : dtos.languageId;
-                        movieImage = dtos.movieImage == null
-                            ? findLanguageAndMiniumAgeAndMovieInfo.movieImage
-                            : await cloudinaryServices.uploadFileToCloudinary(dtos.movieImage);
-
-                        movieDuration = dtos.movieDuration ?? findLanguageAndMiniumAgeAndMovieInfo.movieDuration;
-                        relaseDate = dtos.releaseDate ?? findLanguageAndMiniumAgeAndMovieInfo.ReleaseDate;
-
-                        // Nếu ko phải null thì tiến hành xóa hết trong DB
-
-                        // Tạo môột List
-                        List<string> movieGenre = new List<string>();
-                        List<string> movieVisualFormat = new List<string>();
-                        if (!dtos.movieGenreList.IsNullOrEmpty())
-                        {
-                            _dataContext.movieGenreInformation
-                                .RemoveRange(findGenreFilm);
-                            movieGenre = dtos.movieGenreList;
-                            List<movieGenreInformation> movieGenreList = new List<movieGenreInformation>();
-                            foreach (var Element in movieGenre)
-                            {
-                                // Duyeejt cac Element
-                                movieGenreList.Add(new movieGenreInformation()
-                                {
-                                    movieId = findLanguageAndMiniumAgeAndMovieInfo.movieId,
-                                    movieGenreId = Element
-                                });
-                            }
-
-                            await _dataContext.movieGenreInformation.AddRangeAsync(movieGenreList);
-                            // Tieeps tuc them vao DB
-                        }
-
-                        // Xóa hết
-
-                        if (!dtos.visualFormatList.IsNullOrEmpty())
-                        {
-                            _dataContext.movieVisualFormatDetails
-                                .RemoveRange(findMovieVisualFormatID);
-                            movieVisualFormat = dtos.visualFormatList;
-
-                            List<movieVisualFormatDetail> movieVisualFormatList = new List<movieVisualFormatDetail>();
-
-                            foreach (var element in movieVisualFormat)
-                            {
-                                movieVisualFormatList.Add(new movieVisualFormatDetail()
-                                {
-                                    movieId = findLanguageAndMiniumAgeAndMovieInfo.movieId,
-                                    movieVisualFormatId = element
-                                });
-                            }
-
-                            await _dataContext.movieVisualFormatDetails.AddRangeAsync(movieVisualFormatList);
-                        }
-
-                        findLanguageAndMiniumAgeAndMovieInfo.movieActor = movieActor;
-                        findLanguageAndMiniumAgeAndMovieInfo.movieDirector = movieDirector;
-                        findLanguageAndMiniumAgeAndMovieInfo.movieDuration = movieDuration;
-                        findLanguageAndMiniumAgeAndMovieInfo.languageId = languageID;
-                        findLanguageAndMiniumAgeAndMovieInfo.minimumAgeID = minumAgeID;
-                        findLanguageAndMiniumAgeAndMovieInfo.movieName = movieName;
-                        findLanguageAndMiniumAgeAndMovieInfo.ReleaseDate = relaseDate;
-                        findLanguageAndMiniumAgeAndMovieInfo.movieDescription = movieDescription;
-                        findLanguageAndMiniumAgeAndMovieInfo.movieImage = movieImage;
-                        findLanguageAndMiniumAgeAndMovieInfo.movieTrailerUrl = trailerURL;
-
-
-                        _dataContext.movieInformation.Update(findLanguageAndMiniumAgeAndMovieInfo);
-                        await _dataContext.SaveChangesAsync();
-                        await Transition.CommitAsync();
-                        return new GenericRespondDTOs()
-                        {
-                            Status = GenericStatusEnum.Success.ToString(),
-                            message = "Sửa phim thành công"
-                        };
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                        await Transition.RollbackAsync();
-                        return new GenericRespondDTOs()
-                        {
-                            Status = GenericStatusEnum.Failure.ToString(),
-                            message = "Lỗi" + ex.Message
-                        };
-                    }
-                }
-
-                return new GenericRespondDTOs()
-                {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Lỗi đã có người đặt vé"
-                };
-            }
-
-            return new GenericRespondDTOs()
-            {
-                Status = GenericStatusEnum.Failure.ToString(),
-                message = "Lỗi Không tìm thấy thông tin phim"
-            };
-        }
-
-        public async Task<PagniationRespond> getListItemsPagination(int page, int pagesize = 9)
-        {
-            // Lấy giờ hiện tại
-            DateTime dateTime = DateTime.Now;
-            var getAllData = _dataContext.movieInformation.ToList();
-            var getAllMovieData = await _dataContext.movieInformation
-                .Where(x => !x.isDelete)
-                .Select(x => new movieRespondDTO()
-                {
-                    movieName = x.movieName,
-                    movieID = x.movieId,
-                    movieImage = x.movieImage,
-                    movieDuration = x.movieDuration,
-                    movieGenres = x.movieGenreInformation.Select(mg => mg.movieGenre.movieGenreName).ToArray(),
-                    ListLanguageName = x.Language.languageDetail,
-                    movieTrailerUrl = x.movieTrailerUrl,
-                    releaseDate = x.ReleaseDate,
-                    movieVisualFormat = x.movieVisualFormatDetail
-                        .Select(vs => vs.movieVisualFormat.movieVisualFormatName).ToArray(),
-                    isRelease = x.ReleaseDate > DateTime.Now ? false : true,
-                    minimumAge =
-                        _dataContext.minimumAges.FirstOrDefault(m => m.minimumAgeID.Equals(x.minimumAgeID))
-                            .minimumAgeInfo,
-                    minimumAgeDescription =
-                        _dataContext.minimumAges.FirstOrDefault(m => m.minimumAgeID.Equals(x.minimumAgeID))
-                            .minimumAgeDescription
-                }).Skip((page - 1) * pagesize).Take(pagesize).ToListAsync();
-            var newPagniationRespond = new PagniationRespond()
-            {
-                movieRespondDTOs = getAllMovieData.ToList(),
-                page = page,
-                pageSize = (int)Math.Ceiling((double)getAllData.Count() / pagesize),
-                totalCount = getAllData.Count,
-            };
-            return newPagniationRespond;
-        }
-
-        public async Task<List<movieRespondDTO>> getListMoviesByNameTake5(string movie)
-        {
-            DateTime dateTime = DateTime.Now;
-            var getAllMovieData = await _dataContext.movieInformation
-                .Where(x => x.movieName.Contains(movie) && !x.isDelete)
-                .Select(x => new movieRespondDTO()
-                {
-                    movieName = x.movieName,
-                    movieID = x.movieId,
-                    movieDuration = x.movieDuration,
-                    movieGenres = x.movieGenreInformation.Select(mg => mg.movieGenre.movieGenreName).ToArray(),
-                    ListLanguageName = x.Language.languageDetail,
-                    movieTrailerUrl = x.movieTrailerUrl,
-                    releaseDate = x.ReleaseDate,
-                    movieVisualFormat = x.movieVisualFormatDetail
-                        .Select(vs => vs.movieVisualFormat.movieVisualFormatName).ToArray(),
-                    isRelease = x.ReleaseDate > DateTime.Now ? false : true,
-
+                    MovieId = m.MovieId,
+                    Title = m.Title,
+                    PosterUrl = m.PosterUrl,
+                    DurationMinutes = m.DurationMinutes,
+                    ReleaseDate = m.ReleaseDate,
+                    TrailerUrl = m.TrailerUrl,
+                    Language = m.Language,
+                    Genres = m.MovieGenres.Select(mg => mg.Genre.Name).ToList()
                 })
-                .Take(5).ToListAsync();
-            return getAllMovieData;
+                .ToListAsync();
+
+            var response = new PaginationResponseDTO<MovieResponseDTO>
+            {
+                Items = movies,
+                CurrentPage = page,
+                TotalPages = totalPages,
+                TotalCount = totalCount
+            };
+
+            return (true, "Lấy danh sách thành công", response);
         }
 
-        public async Task<PagniationRespond> getFullSearchResult(string movieName, int page, int pagesize = 9)
+        public async Task<(bool IsSuccess, string Message, object? Data)> SearchMoviesPaginationAsync(string keyword, int page, int pageSize = 9)
         {
-            // Lấy giờ hiện tại
-            DateTime dateTime = DateTime.Now;
-            var getAllMovieData = await _dataContext.movieInformation
-                .Where(x => x.movieName.Contains(movieName) && !x.isDelete)
-                .Select(x => new movieRespondDTO()
+            var query = _context.Movies.Where(m => m.Title.Contains(keyword) && m.IsDeleted == false);
+            
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            var movies = await query
+                .Include(m => m.MovieGenres).ThenInclude(mg => mg.Genre)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(m => new MovieResponseDTO
                 {
-                    movieName = x.movieName,
-                    movieID = x.movieId,
-                    movieImage = x.movieImage,
-                    movieDuration = x.movieDuration,
-                    movieGenres = x.movieGenreInformation.Select(mg => mg.movieGenre.movieGenreName).ToArray(),
-                    ListLanguageName = x.Language.languageDetail,
-                    movieTrailerUrl = x.movieTrailerUrl,
-                    releaseDate = x.ReleaseDate,
-                    movieVisualFormat = x.movieVisualFormatDetail
-                        .Select(vs => vs.movieVisualFormat.movieVisualFormatName).ToArray(),
-                    isRelease = x.ReleaseDate > DateTime.Now ? false : true,
-                    minimumAge =
-                        _dataContext.minimumAges.FirstOrDefault(m => m.minimumAgeID.Equals(x.minimumAgeID))
-                            .minimumAgeInfo,
-                    minimumAgeDescription =
-                        _dataContext.minimumAges.FirstOrDefault(m => m.minimumAgeID.Equals(x.minimumAgeID))
-                            .minimumAgeDescription
-                }).Skip((page - 1) * pagesize).Take(pagesize).ToListAsync();
-            var newPagniationRespond = new PagniationRespond()
+                    MovieId = m.MovieId,
+                    Title = m.Title,
+                    PosterUrl = m.PosterUrl,
+                    DurationMinutes = m.DurationMinutes,
+                    ReleaseDate = m.ReleaseDate,
+                    TrailerUrl = m.TrailerUrl,
+                    Language = m.Language,
+                    Genres = m.MovieGenres.Select(mg => mg.Genre.Name).ToList()
+                })
+                .ToListAsync();
+
+            var response = new PaginationResponseDTO<MovieResponseDTO>
             {
-                movieRespondDTOs = getAllMovieData,
-                page = page,
-                pageSize = (int)Math.Ceiling((double)getAllMovieData.Count() / pagesize),
-                totalCount = getAllMovieData.Count,
+                Items = movies,
+                CurrentPage = page,
+                TotalPages = totalPages,
+                TotalCount = totalCount
             };
-            return newPagniationRespond;
+            
+            return (true, "Tìm kiếm thành công", response);
         }
 
-
-        public async Task<List<movieRespondDTO>> getListMoviesByName(string movie)
+        public async Task<(bool IsSuccess, string Message, object? Data)> GetShowingMoviesTake5Async()
         {
-            DateTime dateTime = DateTime.Now;
-            var getAllMovieData = await _dataContext.movieInformation
-                .Where(x => x.movieName.Contains(movie) && !x.isDelete)
-                .Select(x => new movieRespondDTO()
-                {
-                    movieName = x.movieName,
-                    movieID = x.movieId,
-                    movieDuration = x.movieDuration,
-                    movieGenres = x.movieGenreInformation.Select(mg => mg.movieGenre.movieGenreName).ToArray(),
-                    ListLanguageName = x.Language.languageDetail,
-                    movieTrailerUrl = x.movieTrailerUrl,
-                    movieVisualFormat = x.movieVisualFormatDetail
-                        .Select(vs => vs.movieVisualFormat.movieVisualFormatName).ToArray(),
-                    isRelease = x.ReleaseDate > DateTime.Now ? false : true,
-
-                }).ToListAsync();
-            return getAllMovieData;
+            var movies = await _context.Movies
+                .Where(m => m.IsDeleted == false && m.ReleaseDate <= DateTime.Now)
+                .Take(5)
+                .Select(m => new MovieResponseDTO { MovieId = m.MovieId, Title = m.Title, PosterUrl = m.PosterUrl, TrailerUrl = m.TrailerUrl })
+                .ToListAsync();
+                
+            return (true, "Lấy data thành công", movies);
         }
 
-        public async Task<GenericRespondWithObjectDTO<List<GetMovieShowedDTOList>>> GetShowedMovieTake5()
+        public async Task<(bool IsSuccess, string Message, object? Data)> GetUpcomingMoviesTake5Async()
         {
-            // Lấy danh sách phim đang chiếu
-            // Layas Danh Sách check ở MovieSchedule coi đã có lịch chiếu chưa 
-            // Lấy Random 5 Phim Đã chiếu
-            // Lấy thông tin 
-            var findShowedMovie = _dataContext
-                .movieInformation
-                .Where(x => !x.isDelete && x.ReleaseDate < DateTime.Now);
-            var selectData = await findShowedMovie.Select(x => new GetMovieShowedDTOList()
-            {
-                MovieId = x.movieId,
-                MovieName = x.movieName,
-                MovieImage = x.movieImage,
-                TrailerURL = x.movieTrailerUrl
-            }).Take(5).ToListAsync();
-            return new GenericRespondWithObjectDTO<List<GetMovieShowedDTOList>>()
-            {
-                Status = GenericStatusEnum.Success.ToString() ,
-                message = "Layas Data thanh cong" ,
-                data = selectData
-            };
-        }
-
-        public async Task<GenericRespondWithObjectDTO<List<GetMovieShowedDTOList>>> GetUnShowedMovieTake5()
-        {
-            var findShowedMovie = _dataContext.movieInformation
-                .Where(x =>
-                    !x.isDelete && x.ReleaseDate > DateTime.Now);
-            var selectData = await findShowedMovie.Select(x => new GetMovieShowedDTOList()
-            {
-                MovieId = x.movieId,
-                MovieName = x.movieName,
-                MovieImage = x.movieImage,
-                TrailerURL = x.movieTrailerUrl
-            }).Take(5).ToListAsync();
-            return new GenericRespondWithObjectDTO<List<GetMovieShowedDTOList>>()
-            {
-                Status = GenericStatusEnum.Success.ToString() ,
-                message = "Layas Data thanh cong" ,
-                data = selectData
-            };
+            var movies = await _context.Movies
+                .Where(m => m.IsDeleted == false && m.ReleaseDate > DateTime.Now)
+                .Take(5)
+                .Select(m => new MovieResponseDTO { MovieId = m.MovieId, Title = m.Title, PosterUrl = m.PosterUrl, TrailerUrl = m.TrailerUrl })
+                .ToListAsync();
+                
+            return (true, "Lấy data thành công", movies);
         }
     }
 }

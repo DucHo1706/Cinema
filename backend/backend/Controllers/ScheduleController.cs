@@ -1,11 +1,10 @@
-﻿using backend.Data;
-using backend.Enum;
-using backend.Interface.Schedule;
-using backend.ModelDTO.ScheduleDTO;
-using backend.ModelDTO.ScheduleDTO.Request;
+﻿using backend.Interface.Schedule;
+using backend.DTOs.Requests;
+using backend.DTOs.Responses;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
 
 namespace backend.Controllers
 {
@@ -13,97 +12,69 @@ namespace backend.Controllers
     [ApiController]
     public class ScheduleController : ControllerBase
     {
-        private readonly IScheduleServices scheduleServices;
+        private readonly IScheduleServices _scheduleServices;
         
-        private readonly DataContext dataContext;
-
-        public ScheduleController(IScheduleServices scheduleServices , DataContext dataContext)
+        public ScheduleController(IScheduleServices scheduleServices)
         {
-            this.scheduleServices = scheduleServices;
-            this.dataContext = dataContext;
+            _scheduleServices = scheduleServices;
         }
+
         [HttpPost("addSchedule")]
         [Authorize(Policy = "TheaterManager")]
-        public async Task<IActionResult> addSchedule(string cinemaId ,ScheduleRequestDTO scheduleRequestDTO)
+        public async Task<IActionResult> AddSchedule([FromBody] CreateShowtimeDTO request)
         {
-            var status = await scheduleServices.add(cinemaId, scheduleRequestDTO);
-            if (status.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            var result = await _scheduleServices.AddShowtimeAsync(request);
+            if (result.IsSuccess == false)
             {
-                return BadRequest(status);
+                return BadRequest(new { message = result.Message });
             }
-            return Ok(status);
+            return Ok(new { message = result.Message, data = result.Data });
         }
 
         [HttpPatch("editSchedule/{id}")]
         [Authorize(Policy = "TheaterManager")]
-        public async Task<IActionResult> editSchedule(string id, EditScheduleDTO edit)
+        public async Task<IActionResult> EditSchedule(string id, [FromBody] EditShowtimeDTO request)
         {
-            var status = await scheduleServices.edit(id, edit);
-            if (status.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            var result = await _scheduleServices.EditShowtimeAsync(id, request);
+            if (result.IsSuccess == false)
             {
-                return BadRequest(new { message = "thay đổi thất bại do có lỗi =(" });
+                return BadRequest(new { message = result.Message });
             }
-            return Ok(new { message = "Đã thay đổi thành công" });
+            return Ok(new { message = result.Message });
         }
 
         [HttpDelete("removeSchedule/{id}")]
         [Authorize(Policy = "TheaterManager")]
-        public async Task<IActionResult> removeSchedule(string id)
+        public async Task<IActionResult> RemoveSchedule(string id)
         {
-            var status = await scheduleServices.delete(id);
-            if (status.Status.Equals(GenericStatusEnum.Success.ToString())) 
+            var result = await _scheduleServices.DeleteShowtimeAsync(id);
+            if (result.IsSuccess == false) 
             {
-                return Ok(status);
+                return BadRequest(new { message = result.Message });
             }
-            return BadRequest(status);
+            return Ok(new { message = result.Message });
         }
 
         [HttpGet("getScheduleByName")]
-        public IActionResult getScheduleByName([FromQuery] string name)
+        public async Task<IActionResult> GetScheduleByName([FromQuery] string name)
         {
-            var findStatus = scheduleServices.getAlSchedulesByMovieName(name);
-            if (findStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            var result = await _scheduleServices.GetShowtimesByMovieNameAsync(name);
+            if (result.IsSuccess == false)
             {
-                return BadRequest(findStatus);
+                return BadRequest(new { message = result.Message });
             }
-            return Ok(findStatus);
-        }
-        
-        
-        [Authorize(Policy = "TheaterManager")]
-        [HttpGet("GetMovieVisualFormatByMovieId")]
-        public IActionResult getMovieVisualFormatById(string movieId)
-        {
-            var getStatus = scheduleServices.getVisualFormatListByMovieId(movieId);
-            if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
-            {
-                return BadRequest(getStatus);
-            }
-            return Ok(getStatus);
-        }
-
-        [HttpGet("GetAllTimes")]
-        public IActionResult GetAllTimes()
-        {
-            var getAllTimes = dataContext.HourSchedule
-                .Select(x => new
-                {
-                    HourScheduleID = x.HourScheduleID,
-                    HourScheduleShowTime = x.HourScheduleShowTime
-                });
-            return Ok(getAllTimes);
+            return Ok(new { message = result.Message, data = result.Data });
         }
 
         [HttpGet("getMovieScheduleId")]
-        public IActionResult GetMovieScheduleId(string movieId , string HourId , string cinemaRooomId , DateTime showDate)
+        public async Task<IActionResult> GetMovieScheduleId(string roomId, DateTime startTime, string movieId)
         {
-            var getStatus = scheduleServices.getScheduleId
-                (cinemaRooomId, showDate, HourId, movieId);
-            if (getStatus.Status.Equals(GenericStatusEnum.Success.ToString()))
+            var result = await _scheduleServices.GetShowtimeIdAsync(roomId, startTime, movieId);
+            if (result.IsSuccess == true)
             {
-                return Ok(getStatus);
+                return Ok(new { message = result.Message, data = result.Data });
             }
-            return NotFound(getStatus);
+            return NotFound(new { message = result.Message });
         }
     }
 }

@@ -1,19 +1,13 @@
-using backend.ModelDTO.GenericRespond;
-using backend.ModelDTO.StaffDTOs;
+using backend.DTOs.Requests;
+using System.Threading.Tasks;
 
-namespace backend.Interface.StaffInterface;
-
-public interface IStaffService
+namespace backend.Interface.StaffInterface
 {
-    Task<GenericRespondDTOs> addStaff(CreateStaffDTO createStaffDTO);
-    
-    Task<GenericRespondDTOs> EditStaff(string id , EditStaffDTO editStaffDTO);
-    
-    Task<GenericRespondDTOs> DeleteStaff(string id);
-    
-    GenericRespondWithObjectDTO<List<RoleInfoListDTO>> getRoles();
-    
-    GenericRespondWithObjectDTO<List<GetStaffInfoDTO>> GetStaffListInfo();
-    
-    GenericRespondWithObjectDTO<GetStaffInfoDTO> GetStaffInfo(string id);
+    public interface IStaffService
+    {
+        Task<(bool IsSuccess, string Message, object? Data)> GetAllStaffsAsync();
+        Task<(bool IsSuccess, string Message, object? Data)> CreateStaffAsync(CreateStaffRequestDTO request);
+        Task<(bool IsSuccess, string Message, object? Data)> UpdateStaffAsync(string userId, UpdateStaffRequestDTO request);
+        Task<(bool IsSuccess, string Message, object? Data)> DeleteStaffAsync(string userId);
+    }
 }

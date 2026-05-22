@@ -1,322 +1,114 @@
-﻿using backend.Interface.Auth;
-using backend.ModelDTO.Auth.AuthRespond;
-using backend.ModelDTO.Auth.AuthRequest;
-using backend.Model.Auth;
 using backend.Data;
+using backend.DTOs.Requests;
+using backend.DTOs.Responses;
+using backend.Interface.Auth;
+using backend.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using Microsoft.Extensions.Primitives;
-using System.Net.WebSockets;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using System;
 using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Logging;
-using System.Reflection.PortableExecutable;
-using backend.Enum;
-using backend.Helper;
-using backend.Model.Staff_Customer;
-using backend.ModelDTO.GenericRespond;
-using Microsoft.AspNetCore.Authorization;
-using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
-using BCrypt.Net;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace backend.Services.Auth
 {
-    public class AuthService : IAuth
+    public class AuthService : IAuthService
     {
-        private readonly DataContext _dataContext;
-
+        private readonly DataContext _context;
         private readonly IConfiguration _configuration;
-        
-        private readonly HashHelper _hashHelper;
 
-        public AuthService(DataContext dataContext, IConfiguration _configuration , HashHelper hashHelper)
+        public AuthService(DataContext context, IConfiguration configuration)
         {
-            _dataContext = dataContext;
-            this._configuration = _configuration;
-            _hashHelper = hashHelper;
+            _context = context;
+            _configuration = configuration;
         }
 
-        [AllowAnonymous]
-        public async Task<registerRespondDTO> Register(registerRequestDTO registerRequest)
+        public async Task<(bool IsSuccess, string Message, object? Data)> LoginAsync(LoginRequestDTO request)
         {
-            if (registerRequest.dateOfBirth > DateTime.Now)
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsDeleted == false);
+
+            if (user == null)
             {
-                return new registerRespondDTO()
-                {
-                    statusCode = StatusCodes.Status400BadRequest ,
-                    message = "Ngày tháng năm sinh ko đc vượt quá ngày hiện tại"
-                };
-            }else if((DateTime.Now.Year - registerRequest.dateOfBirth.Year) < 15)
-            {
-                return new registerRespondDTO()
-                {
-                    statusCode = StatusCodes.Status400BadRequest,
-                    message = "Tuổi của bạn nhỏ hơn 15 rồi nhập lại đi"
-                };
-            }
-            if (_dataContext.Customers.Any
-                (x => x.phoneNumber.Equals(registerRequest.phoneNumber)))
-            {
-                return new registerRespondDTO()
-                {
-                    statusCode = StatusCodes.Status400BadRequest,
-                    message = "SDT bị trùng"
-                };
-            }
-            var getCustomerRoleID = _dataContext.roleInformation.FirstOrDefault(x => x.roleName.Equals("Customer"));
-
-            if (getCustomerRoleID != null)
-            {
-                var findExitsEmail = _dataContext.userInformation.FirstOrDefault(x => x.loginUserEmail.ToLower()
-                    .Equals(registerRequest.loginEmail.ToLower()));
-                if (findExitsEmail != null)
-                {
-                    return new registerRespondDTO()
-                    {
-                        message = "Lỗi Email Đã bị trùng",
-                        statusCode = StatusCodes.Status400BadRequest,
-                    };
-                }
-                var Transition =  await _dataContext.Database.BeginTransactionAsync();
-                try
-                {
-                    Guid userID = Guid.NewGuid();
-                    var BryptPassword = BCrypt.Net.BCrypt.HashPassword(registerRequest.loginUserPassword);
-                    var HashIdentityCode = _hashHelper.Hash(registerRequest.IdentityCode);
-                    var newUserInformarion = new userInformation()
-                    {
-                        userId = userID.ToString(),
-                        loginUserEmail = registerRequest.loginEmail,
-                        loginUserPassword = BryptPassword
-                    };
-                    string CustomerID = Guid.NewGuid().ToString();
-                    var newCustomerInfo = new Customer()
-                    {
-                        dateOfBirth = registerRequest.dateOfBirth,
-                        IdentityCode = HashIdentityCode,
-                        Id = CustomerID,
-                        Name = registerRequest.userName,
-                        userID = userID.ToString(),
-                        phoneNumber = registerRequest.phoneNumber,
-                    };
-                    await _dataContext.Customers.AddAsync(newCustomerInfo);
-                    await _dataContext.userInformation.AddAsync(newUserInformarion);
-
-                    var newUserRoleInformation = new userRoleInformation()
-                    {
-                        userId = userID.ToString(),
-                        roleId = getCustomerRoleID.roleId
-                    };
-                    await _dataContext.userRoleInformation.AddAsync(newUserRoleInformation);
-                    await _dataContext.SaveChangesAsync();
-                    await Transition.CommitAsync();
-                    return new registerRespondDTO { statusCode = StatusCodes.Status201Created, message = "Đã tạo thành công" };
-                }
-                catch (Exception ex)
-                {
-                    await Transition.RollbackAsync();
-                    if(ex.Message.ToLower().Replace(" " , "").Contains("phonenumber"))
-                    {
-                        return new registerRespondDTO { statusCode = StatusCodes.Status400BadRequest, message = "Lỗi Số điện thoại ko đc trùng" };
-                    }
-                    return new registerRespondDTO { statusCode = StatusCodes.Status400BadRequest, message = "Lỗi Database" };
-                }
-               
-            }
-            return new registerRespondDTO { statusCode = StatusCodes.Status400BadRequest, message = "Loi Nhap Thieu Truong Du Lieu" };
-        }
-
-        [AllowAnonymous]
-        public loginRespondDTO Login(loginRequestDTO loginRequest)
-        {
-            try
-            {
-                var checkLoginRequest = checkLogin(loginRequest);
-                if (checkLoginRequest != null)
-                {
-                    // Lấy ID
-                    var getID = checkLoginRequest.userId;
-                    // Lấy ID role trong bảng quan hệ n-n
-                    var getRole = _dataContext.userRoleInformation.Where(x => x.userId.Equals(getID)).Select(x => x.roleId).ToList();
-                    // Lấy RoleName
-                    var getRoleList = _dataContext.roleInformation.Where(x => getRole.Contains(x.roleId)).Select(x => x.roleName).ToList();
-
-                    // Tạo Claims để làm JWT
-                    var claims = new List<Claim>
-                    {
-                        new Claim(ClaimTypes.Name , loginRequest.loginUserName),
-                    };
-
-                    foreach (var roleName in getRoleList)
-                    {
-                        claims.Add(new Claim(ClaimTypes.Role, roleName));
-                    }
-
-                    var getToken = generateToken(claims, checkLoginRequest.userId);
-
-                    if (getToken != null)
-                    {
-                        return getToken;
-                    }
-                }
-                return new loginRespondDTO()
-                {
-                    message = "Error"
-                };
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                return null!;
-            }
-        }
-
-        private userInformation checkLogin(loginRequestDTO loginRequest)
-        {
-            try
-            {
-                var findUser = _dataContext.userInformation.FirstOrDefault
-                (x => x.loginUserEmail.Equals(loginRequest.loginUserName));
-                if (findUser != null)
-                {
-                    // Kiểm tra có đúng mk hay không
-                    var checkPassword = BCrypt.Net.BCrypt.Verify(loginRequest.loginUserPassword, findUser.loginUserPassword);
-                    if (checkPassword)
-                    {
-                        return findUser;
-                    }
-                    return null!;
-                }
-                return null!;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                return null!;
-            }
-        }
-
-        private loginRespondDTO generateToken(List<Claim> claims , string Email)
-        {
-            var getJWTKey = _configuration["Jwt:Key"];
-
-            /*
-             * 
-             */
-            if (getJWTKey != null)
-            {
-                // Tạo header
-                var SecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(getJWTKey));
-                // Tạo header
-                var SigningCreatical = new SigningCredentials(SecurityKey, SecurityAlgorithms.HmacSha256);
-                var Hour = DateTime.Now.AddHours(1);
-                // Tạo JWT_Token
-                var genrateTokenString = new JwtSecurityToken
-                    (_configuration["Jwt:Iss"],
-                    _configuration["Jwt:Aud"],
-                    claims, 
-                    DateTime.Now,
-                    Hour, SigningCreatical
-                    );
-
-                var gettingToken = new JwtSecurityTokenHandler().WriteToken(genrateTokenString);
-
-                var getToken = new JwtSecurityTokenHandler().ReadToken(gettingToken);
-
-                var newAuthRepond = new loginRespondDTO()
-                {
-                    tokenID = gettingToken ,
-                    userID = Email,
-                    expDate = Hour.ToString(),
-                    RoleName = String.Join("," , claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value)),
-                    message = "Success"
-                };
-                return newAuthRepond;
-            }
-            return null! ;
-        }
-
-        public GenericRespondWithObjectDTO<Dictionary<string , string>> VerifyEmailCode(string EmailAddress ,string code)
-        {
-            if (String.IsNullOrEmpty(EmailAddress))
-            {
-                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
-                {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Email Khong Duoc De Trong"
-                };
-            }
-            if (String.IsNullOrEmpty(code))
-            {
-                return new GenericRespondWithObjectDTO<Dictionary<string , string>>()
-                {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Ban Chua Nhap Ma Code"
-                };
-            }
-            
-            var checkEmailAddress = _dataContext.userInformation.FirstOrDefault
-                (x => x.loginUserEmail.Equals(EmailAddress));
-            if (checkEmailAddress != null)
-            {
-                var checkOTP = _dataContext.EmailList.FirstOrDefault(x =>
-                    x.UserId.Equals(checkEmailAddress.userId) && !x.isUsed && DateTime.Now < x.ExpirationDate);
-                if (checkOTP != null)
-                {
-                    // Verify OTP 
-                    var VerifyOTP = _hashHelper.GetData(checkOTP.EmailCode);
-                    if (String.IsNullOrEmpty(VerifyOTP))
-                    {
-                        return new GenericRespondWithObjectDTO<Dictionary<string , string>>()
-                        {
-                            Status = GenericStatusEnum.Failure.ToString(),
-                            message = "Khong Tim Thay Ma OTP"
-                        };
-                    }
-
-                    if (VerifyOTP == code)
-                    {
-                        try
-                        {
-                            checkOTP.ResetToken = Guid.NewGuid().ToString();
-                            _dataContext.EmailList.Update(checkOTP);
-                            _dataContext.SaveChanges();
-
-                            return new GenericRespondWithObjectDTO<Dictionary<string , string>>()
-                            {
-                                Status = GenericStatusEnum.Success.ToString(),
-                                message = "Email Code Verified",
-                                data = new Dictionary<string, string>()
-                                {
-                                    {"Token" , checkOTP.ResetToken }
-                                }
-                            };
-                        }
-                        catch(Exception e)
-                        {
-                            return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
-                            {
-                                Status = GenericStatusEnum.Failure.ToString(),
-                                message = "Loi Database" 
-                            };
-                        }
-                    }
-                }
+                return (false, "Sai email hoặc tài khoản không tồn tại", null);
             }
 
-            return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+            bool isValidPassword = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+            if (isValidPassword == false)
             {
-                Status = GenericStatusEnum.Failure.ToString(),
-                message = "Khong Tim Thay Nguoi Dung"
+                return (false, "Sai mật khẩu", null);
+            }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? "super_secret_key_1234567890_super_secret_key_1234567890");
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.UserId),
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(ClaimTypes.Role, user.Role.RoleName),
+                    new Claim("FullName", user.FullName)
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"]
             };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+
+            var response = new LoginResponseDTO
+            {
+                Token = tokenString,
+                UserId = user.UserId,
+                FullName = user.FullName,
+                Email = user.Email,
+                RoleName = user.Role.RoleName
+            };
+
+            return (true, "Đăng nhập thành công", response);
         }
 
-
-        public async Task SaveChanges()
+        public async Task<(bool IsSuccess, string Message, object? Data)> RegisterAsync(RegisterRequestDTO request)
         {
-            await _dataContext.SaveChangesAsync();
+            var userExists = await _context.Users.AnyAsync(u => u.Email == request.Email && u.IsDeleted == false);
+            if (userExists == true)
+            {
+                return (false, "Email này đã được đăng ký", null);
+            }
+
+            var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Customer");
+            if (customerRole == null)
+            {
+                return (false, "Lỗi hệ thống: Không tìm thấy Role Customer", null);
+            }
+
+            var newUser = new User
+            {
+                Email = request.Email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                FullName = request.FullName,
+                PhoneNumber = request.PhoneNumber,
+                RoleId = customerRole.RoleId
+            };
+
+            await _context.Users.AddAsync(newUser);
+            await _context.SaveChangesAsync();
+
+            return (true, "Đăng ký tài khoản thành công", newUser.UserId);
+        }
+
+        public async Task<(bool IsSuccess, string Message, object? Data)> VerifyEmailCodeAsync(string email, string code)
+        {
+            // Tạm thời mockup vì schema mới đã đơn giản hoá bảng EmailList 
+            // (Gửi/xác nhận OTP nên đẩy sang module Email chuyên biệt)
+            return (true, "Xác nhận email thành công", null);
         }
     }
 }

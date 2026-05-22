@@ -1,79 +1,56 @@
-﻿using backend.Enum;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using backend.Services.Auth;
-using backend.Interface.Account;
-using backend.ModelDTO.Auth.AuthRespond;
-using backend.ModelDTO.Auth.AuthRequest;
-using backend.Model.Auth;
-using BCrypt.Net;
-using backend.Interface.Auth;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using backend.DTOs.Requests;
+using System.Threading.Tasks;
+using backend.Interface.Auth;
 
 namespace backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous]
     public class AuthController : ControllerBase
     {
-        // DI
+        private readonly IAuthService _authService;
 
-        private readonly IAuth _IAuth;
-        public AuthController(IAuth _IAuth)
+        public AuthController(IAuthService authService)
         {
-            this._IAuth = _IAuth;
-        }
-
-        [HttpPost("register")]
-        [AllowAnonymous]
-        public async Task<IActionResult> register(registerRequestDTO registerRequestDTO)
-        {
-            if (registerRequestDTO != null)
-            {
-                var getRespondDTO = await _IAuth.Register(registerRequestDTO);
-                if (getRespondDTO.statusCode.Equals(StatusCodes.Status400BadRequest))
-                {
-                    return BadRequest(new { message = getRespondDTO.message });
-                }
-                await _IAuth.SaveChanges();
-                return Ok(new {message = getRespondDTO.message});
-            }
-
-            var newRegisterRespondDTOError = new registerRespondDTO()
-            {
-                statusCode = StatusCodes.Status400BadRequest ,
-                message = "Lỗi"
-            };
-            return BadRequest(newRegisterRespondDTOError);
+            _authService = authService;
         }
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public IActionResult login(loginRequestDTO loginRequestDTO)
+        public async Task<IActionResult> Login([FromBody] LoginRequestDTO request)
         {
-            if (loginRequestDTO != null)
+            var result = await _authService.LoginAsync(request);
+            if (result.IsSuccess == false)
             {
-                var getStatus = _IAuth.Login(loginRequestDTO);
-                if (getStatus.message.ToLower().Equals("error"))
-                {
-                    return BadRequest(new {message = "Nhập sai mật khẩu hoặc userName"});
-                }
-
-                return Ok(getStatus);
+                return BadRequest(new { message = result.Message });
             }
-            return BadRequest();
+            return Ok(new { message = result.Message, data = result.Data });
+        }
+
+        [HttpPost("register")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Register([FromBody] RegisterRequestDTO request)
+        {
+            var result = await _authService.RegisterAsync(request);
+            if (result.IsSuccess == false)
+            {
+                return BadRequest(new { message = result.Message });
+            }
+            return Ok(new { message = result.Message, data = result.Data });
         }
 
         [HttpPost("VerifyEmailCode")]
-        public IActionResult VerifyEmailCode(string EmailAddress ,string code)
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyEmailCode([FromQuery] string emailAddress, [FromQuery] string code)
         {
-            var getStatus = _IAuth.VerifyEmailCode(EmailAddress, code);
-            if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            var result = await _authService.VerifyEmailCodeAsync(emailAddress, code);
+            if (result.IsSuccess == false)
             {
-                return BadRequest();
+                return BadRequest(new { message = result.Message });
             }
-            return Ok(getStatus);
+            return Ok(new { message = result.Message });
         }
     }
 }

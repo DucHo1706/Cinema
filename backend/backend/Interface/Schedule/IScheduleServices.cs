@@ -1,22 +1,16 @@
-﻿using backend.ModelDTO.GenericRespond;
-using backend.ModelDTO.ScheduleDTO;
-using backend.ModelDTO.ScheduleDTO.Request;
+﻿using System;
+using System.Threading.Tasks;
+using backend.DTOs.Requests;
+using backend.DTOs.Responses;
 
 namespace backend.Interface.Schedule
 {
     public interface IScheduleServices
     {
-        Task<GenericRespondDTOs> add(string cinemaId ,ScheduleRequestDTO scheduleRequestDTO);
-
-        Task<GenericRespondDTOs> edit(string movieScheduleId, EditScheduleDTO editScheduleDto);
-
-        Task<GenericRespondDTOs> delete(string id);
-
-        GenericRespondWithObjectDTO<string> getScheduleId(string cinemaRoomId , DateTime ShowDate , string HourId , string movieId);
-
-        GenericRespondWithObjectDTO<List<GetListScheduleDTO>> getAlSchedulesByMovieName(string movieName);
-        
-        GenericRespondWithObjectDTO<GetVisualFormatListByMovieIdDTO> getVisualFormatListByMovieId(string movieId);
-
+        Task<(bool IsSuccess, string Message, object? Data)> AddShowtimeAsync(CreateShowtimeDTO request);
+        Task<(bool IsSuccess, string Message, object? Data)> EditShowtimeAsync(string showtimeId, EditShowtimeDTO request);
+        Task<(bool IsSuccess, string Message, object? Data)> DeleteShowtimeAsync(string showtimeId);
+        Task<(bool IsSuccess, string Message, object? Data)> GetShowtimesByMovieNameAsync(string movieName);
+        Task<(bool IsSuccess, string Message, object? Data)> GetShowtimeIdAsync(string roomId, DateTime startTime, string movieId);
     }
 }

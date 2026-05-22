@@ -1,11 +1,7 @@
-﻿using backend.Enum;
-using backend.Interface.GenericsInterface;
-using backend.ModelDTO.BookingHistoryDTO.OrderDetailRespond;
-using backend.ModelDTO.BookingHistoryDTO.OrderRespond;
+﻿using backend.Interface.BookingInterface;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace backend.Controllers
 {
@@ -13,34 +9,35 @@ namespace backend.Controllers
     [ApiController]
     public class BookingHistoryController : ControllerBase
     {
-        private readonly GenericInterface<BookingHistoryRespondList, OrderDetailRespond> bookingHistoryList;
+        private readonly IBookingHistoryService _bookingHistoryService;
 
-        public BookingHistoryController(GenericInterface<BookingHistoryRespondList, OrderDetailRespond> bookingHistoryList)
+        public BookingHistoryController(IBookingHistoryService bookingHistoryService)
         {
-            this.bookingHistoryList = bookingHistoryList;
+            _bookingHistoryService = bookingHistoryService;
         }
 
         [HttpGet("getBookingHistory/{userID}")]
         [Authorize(Policy = "Customer")]
         public async Task<IActionResult> getBookingHistoryLists(string userID)
          {
-            var getLists = await bookingHistoryList.getAll(userID);
-
-            if (getLists.Status.Equals(GenericStatusEnum.Success.ToString()))
+            var result = await _bookingHistoryService.GetBookingHistoryAsync(userID);
+            if (result.IsSuccess == false)
             {
-                return Ok(getLists);
+                return BadRequest(new { message = result.Message });
             }
-
-            return NotFound(new {message = "Lỗi rồi chúng tôi Không tìm thấy thông tin của bạn"});
+            return Ok(new { message = result.Message, data = result.Data });
         }
 
         [HttpGet("getBookingHistoryDetail/{orderID}")]
         [Authorize(Policy = "Customer")]
         public async Task<IActionResult> getBookingHistoryDetail(string orderID)
         {
-            // Add Thêm services
-            var getServices = await bookingHistoryList.getByID(orderID);
-            return Ok(getServices);
+            var result = await _bookingHistoryService.GetBookingHistoryDetailAsync(orderID);
+            if (result.IsSuccess == false)
+            {
+                return NotFound(new { message = result.Message });
+            }
+            return Ok(new { message = result.Message, data = result.Data });
         }
     }
 }

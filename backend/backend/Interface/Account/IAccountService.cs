@@ -1,19 +1,13 @@
-﻿using backend.Enum;
-using backend.ModelDTO.Account;
-using backend.ModelDTO.Account.AccountRequest;
-using backend.ModelDTO.Account.AccountRespond;
-using backend.ModelDTO.GenericRespond;
+using backend.DTOs.Requests;
+using System.Threading.Tasks;
 
 namespace backend.Interface.Account
 {
     public interface IAccountService
     {
-        GenericRespondWithObjectDTO<ProfileRespond> getProfileRespond(string id);
-        
-        GenericRespondDTOs editProfileRequest(string id , profileRequest profileRequest);
-
-        GenericRespondDTOs ChangePassword(string userId  , ChangePasswordDTO dtos);
-
-        Task<GenericRespondDTOs> ResetPassword(ReNewPasswordDTO dtos);
+        Task<(bool IsSuccess, string Message, object? Data)> GetAccountInfoAsync(string userId);
+        Task<(bool IsSuccess, string Message, object? Data)> ChangePasswordAsync(string userId, ChangePasswordRequestDTO request);
+        Task<(bool IsSuccess, string Message, object? Data)> UpdateProfileAsync(string userId, UpdateProfileRequestDTO request);
+        Task<(bool IsSuccess, string Message, object? Data)> ResetPasswordAsync(ResetPasswordRequestDTO request);
     }
 }

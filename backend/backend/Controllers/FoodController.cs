@@ -1,6 +1,8 @@
-using backend.Enum;
 using backend.Interface.FoodInterface;
+using backend.DTOs.Requests;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace backend.Controllers;
 
@@ -8,7 +10,6 @@ namespace backend.Controllers;
 [Route("api/[controller]")]
 public class FoodController : ControllerBase
 {
-    // Khoi tao doi tuong
     private readonly IFoodService _foodService;
 
     public FoodController(IFoodService foodService)
@@ -16,15 +17,41 @@ public class FoodController : ControllerBase
         _foodService = foodService;
     }
 
-    [HttpGet("GetFoodInformation")]
-    public IActionResult GetFoodInformation()
+    [HttpGet("GetAllFoods")]
+    public async Task<IActionResult> GetAllFoods()
     {
-        var getFood = _foodService.getFullListOfFoods();
-        if (getFood.Status.Equals(GenericStatusEnum.Failure.ToString()))
-        {
-            return BadRequest(getFood);
-        }
-        return Ok(getFood);
+        var result = await _foodService.GetAllFoodsAsync();
+        if (result.IsSuccess == false) return BadRequest(new { message = result.Message });
+        return Ok(new { message = result.Message, data = result.Data });
     }
-    
+
+    [HttpPost("CreateFood")]
+    [Authorize(Policy = "TheaterManager")]
+    public async Task<IActionResult> CreateFood([FromBody] CreateFoodRequestDTO request)
+    {
+        var result = await _foodService.CreateFoodAsync(request);
+        if (result.IsSuccess == false) return BadRequest(new { message = result.Message });
+        return Ok(new { message = result.Message, data = result.Data });
+    }
+
+    [HttpPut("UpdateFood/{foodId}")]
+    [Authorize(Policy = "TheaterManager")]
+    public async Task<IActionResult> UpdateFood(string foodId, [FromBody] UpdateFoodRequestDTO request)
+    {
+        var result = await _foodService.UpdateFoodAsync(foodId, request);
+        if (result.IsSuccess == false) return BadRequest(new { message = result.Message });
+        return Ok(new { message = result.Message });
+    }
+
+    [HttpDelete("DeleteFood/{foodId}")]
+    [Authorize(Policy = "TheaterManager")]
+    public async Task<IActionResult> DeleteFood(string foodId)
+    {
+        var result = await _foodService.DeleteFoodAsync(foodId);
+        if (result.IsSuccess == false)
+        {
+            return BadRequest(new { message = result.Message });
+        }
+        return Ok(new { message = result.Message });
+    }
 }

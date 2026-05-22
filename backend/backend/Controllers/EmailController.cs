@@ -1,6 +1,6 @@
-using backend.Enum;
 using backend.Interface.EmailInterface;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace backend.Controllers;
 
@@ -16,13 +16,13 @@ public class EmailController : ControllerBase
     }
 
     [HttpPost("send")]
-    public async Task<IActionResult> SendEmail([FromQuery] string email)
+    public async Task<IActionResult> SendOtp([FromQuery] string email)
     {
-        var getStatus = await _emailService.SendOtp(email);
-        if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        var result = await _emailService.SendOtpAsync(email);
+        if (result.IsSuccess == false)
         {
-            return BadRequest(getStatus);
+            return BadRequest(new { message = result.Message });
         }
-        return Ok(getStatus);
+        return Ok(new { message = result.Message });
     }
 }

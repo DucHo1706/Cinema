@@ -1,108 +1,52 @@
-﻿using backend.Helper;
+﻿using backend.Data;
 using backend.Interface.VnpayInterface;
-using Microsoft.AspNetCore.Mvc;
-using System.Net;
-using System.Security.Cryptography;
-using System.Text.Encodings.Web;
-using VNPAY.NET;
-using VNPAY.NET.Models;
-using VNPAY.NET.Utilities;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace backend.Services.VnpayServices
 {
     public class VnpayService : IVnpayService
     {
-        private readonly IConfiguration configuration;
+        private readonly DataContext _context;
 
-        public VnpayService(IConfiguration configuration)
+        public VnpayService(DataContext context)
         {
-            this.configuration = configuration;
+            _context = context;
         }
 
-        public string createURL(long amount, string orderID , HttpContext httpContext)
+        public async Task<(bool IsSuccess, string Message, object? Data)> PaymentCallbackAsync(IQueryCollection collections)
         {
-            try
+            var vnp_ResponseCode = collections["vnp_ResponseCode"];
+            var vnp_TxnRef = collections["vnp_TxnRef"]; // Đây chính là OrderId chúng ta truyền đi
+            
+            if (string.IsNullOrEmpty(vnp_TxnRef))
             {
-                var ipAddress = NetworkHelper.GetIpAddress(httpContext);
-                Console.WriteLine(ipAddress);
-                //var request = new PaymentRequest()
-                //{
-                //    PaymentId = DateTime.Now.Ticks,
-                //    Money = amount,
-                //    Description = $"Đây là đơn thanh toán cho đơn hàng số {orderID}",
-                //    BankCode = VNPAY.NET.Enums.BankCode.ANY,
-                //    CreatedDate = DateTime.Now,
-                //    Currency = VNPAY.NET.Enums.Currency.VND,
-                //    Language = VNPAY.NET.Enums.DisplayLanguage.Vietnamese ,
-                //    IpAddress = ipAddress ,  
-                //};
-
-                //var paymentURL = vnpay.GetPaymentUrl(request);
-
-                var newUrlParams = new VnpayURLParams
-                    (configuration["Vnpay:Tmd_Code"] , amount , ipAddress
-                    , $"Đây là đơn thanh toán cho đơn hàng số {orderID}" , configuration["Vnpay:vnp_ReturnUrl"] , orderID);
-
-                var VnpaySandboxURL = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-
-                // Các Params 
-
-                Dictionary<string, string> VnpayParams = new Dictionary<string, string>()
-                {
-                    {"vnp_Version" , newUrlParams.vnp_Version } ,
-                    {"vnp_Command" , newUrlParams.vnp_Command} ,
-                    {"vnp_TmnCode" , newUrlParams.vnp_TmnCode} ,
-                    {"vnp_Amount" , (newUrlParams.vnp_Amount * 100).ToString()} ,
-                    {"vnp_CreateDate" , newUrlParams.vnp_CreateDate} ,
-                    {"vnp_CurrCode" , newUrlParams.vnp_CurrCode} ,
-                    {"vnp_IpAddr" , newUrlParams.vnp_IpAddr} ,
-                    {"vnp_Locale" , newUrlParams.vnp_Locale} ,
-                    {"vnp_OrderInfo" , WebUtility.UrlEncode(newUrlParams.vnp_OrderInfo)} ,
-                    {"vnp_OrderType" , newUrlParams.vnp_OrderType} ,
-                    {"vnp_ReturnUrl" , WebUtility.UrlEncode(newUrlParams.vnp_ReturnUrl) } ,
-                    {"vnp_TxnRef" , orderID }
-                };
-
-                var orderByParams = VnpayParams.OrderBy(x => x.Key);
-
-                // Convert sang dạng Params của Vnpay Yêu cầu
-
-                var convertToParamsToVnpayRequireParams = orderByParams
-                    .Select(x => x.Key + "=" + x.Value);
-
-                // ToURL
-
-                var convertParamsToURL = String.Join("&", convertToParamsToVnpayRequireParams);
-
-                // Mã hóa
-
-                var convertToSHA512 = SHA512_Helper.SHA512_ComputeHash(convertParamsToURL, configuration["Vnpay:SecureHash"]);
-
-                // Chuyển sang dạng URL của VNPAY để tạo yêu cầu request
-
-                var convertToURL = 
-                    VnpaySandboxURL + 
-                    "?" + 
-                    convertParamsToURL 
-                    + 
-                    "&" + 
-                    "vnp_SecureHash" + 
-                    "=" + 
-                    convertToSHA512;
-
-                return convertToURL;
-
-
+                return (false, "Không tìm thấy mã đơn hàng trả về từ VNPAY", null);
             }
-            catch (Exception ex) 
+
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == vnp_TxnRef.ToString());
+            if (order == null)
             {
-                return ex.Message;
+                return (false, "Đơn hàng không tồn tại trong hệ thống", null);
             }
-        }
 
-        public Task<IActionResult> callbackURL()
-        {
-            return null!;
+            if (vnp_ResponseCode == "00")
+            {
+                order.PaymentStatus = "Success";
+                _context.Orders.Update(order);
+                await _context.SaveChangesAsync();
+                
+                return (true, "Thanh toán thành công", order.OrderId);
+            }
+            else
+            {
+                order.PaymentStatus = "Failed";
+                _context.Orders.Update(order);
+                await _context.SaveChangesAsync();
+                
+                return (false, "Thanh toán thất bại hoặc người dùng đã hủy giao dịch", order.OrderId);
+            }
         }
     }
 }

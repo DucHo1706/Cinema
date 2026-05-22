@@ -1,64 +1,67 @@
-using backend.Enum;
-using backend.Interface.Account;
-using backend.ModelDTO.Account;
-using backend.ModelDTO.Account.AccountRequest;
-using backend.ModelDTO.Account.AccountRespond;
+using backend.DTOs.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+using backend.Interface.Account;
 
 namespace backend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AccountController(IAccountService IAccount) : ControllerBase
+public class AccountController : ControllerBase
 {
-    private readonly IAccountService _IAccount = IAccount;
+    private readonly IAccountService _accountService;
+
+    public AccountController(IAccountService accountService)
+    {
+        _accountService = accountService;
+    }
 
     [HttpGet("getAccountInfo")]
-    [Authorize(Policy = "Customer")]
-    public IActionResult GetAccountInfo(string userID)
+    [Authorize]
+    public async Task<IActionResult> GetAccountInfo([FromQuery] string userID)
     {
-        var getUserInfoStatus = _IAccount.getProfileRespond(userID);
-        if (getUserInfoStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        var result = await _accountService.GetAccountInfoAsync(userID);
+        if (result.IsSuccess == false)
         {
-            return BadRequest(getUserInfoStatus);
+            return BadRequest(new { message = result.Message });
         }
-        return Ok(getUserInfoStatus);
+        return Ok(new { message = result.Message, data = result.Data });
     }
 
     [HttpPost("changePassword")]
     [Authorize]
-    public IActionResult ChangePassword(string userID, ChangePasswordDTO changePasswordDTO)
+    public async Task<IActionResult> ChangePassword([FromQuery] string userID, [FromBody] ChangePasswordRequestDTO request)
     {
-        var status = _IAccount.ChangePassword(userID, changePasswordDTO);
-        if (status.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        var result = await _accountService.ChangePasswordAsync(userID, request);
+        if (result.IsSuccess == false)
         {
-            return BadRequest(status);
+            return BadRequest(new { message = result.Message });
         }
-        return Ok(status);
+        return Ok(new { message = result.Message });
     }
 
     [HttpPost("ChangeAccountInformation")]
-    public IActionResult ChangeAccountInfo(string Userid ,profileRequest profileRequest )
+    [Authorize]
+    public async Task<IActionResult> ChangeAccountInfo([FromQuery] string Userid, [FromBody] UpdateProfileRequestDTO request)
     {
-        // git switch -c TranHoaiDuc_Branch_From_FE_BE_Branch
-        
-        var getstatus = _IAccount.editProfileRequest(Userid, profileRequest);
-        if (getstatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        var result = await _accountService.UpdateProfileAsync(Userid, request);
+        if (result.IsSuccess == false)
         {
-            return BadRequest(getstatus);
+            return BadRequest(new { message = result.Message });
         }
-        return Ok(getstatus);
+        return Ok(new { message = result.Message });
     }
 
     [HttpPost("ResetPassword")]
-    public async Task<IActionResult> ResetPassword(ReNewPasswordDTO dtos)
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDTO request)
     {
-        var status = await _IAccount.ResetPassword(dtos);
-        if (status.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        var result = await _accountService.ResetPasswordAsync(request);
+        if (result.IsSuccess == false)
         {
-            return BadRequest(status);
+            return BadRequest(new { message = result.Message });
         }
-        return Ok(status);
+        return Ok(new { message = result.Message });
     }
 }

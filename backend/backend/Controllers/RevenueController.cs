@@ -1,42 +1,38 @@
-using backend.Enum;
 using backend.Interface.RevenueInterface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
 
-namespace backend.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class RevenueController : ControllerBase
+namespace backend.Controllers
 {
-    private readonly IRevenueService _revenueService;
-
-    public RevenueController(IRevenueService revenueService)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class RevenueController : ControllerBase
     {
-        this._revenueService = revenueService;
-    }
+        private readonly IRevenueService _revenueService;
 
-    [HttpGet("GetRevenueByCinemaId")]
-    [Authorize(Policy = "Director")]
-    public async Task<IActionResult> GetRevenueByCinemaId(string cinemaId)
-    {
-        var getData = await _revenueService.GetRevenueByCinemaId(cinemaId);
-        if (getData.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        public RevenueController(IRevenueService revenueService)
         {
-            return BadRequest(getData);
+            _revenueService = revenueService;
         }
-        return Ok(getData);
-    }
 
-    [HttpGet("GetAllRevenue")]
-    [Authorize(Policy = "Director")]
-    public async Task<IActionResult> GetAllRevenue()
-    {
-        var getData = await _revenueService.GetAllRevenue();
-        if (getData.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        [HttpGet("GetRevenueByMovie")]
+        [Authorize(Policy = "Director")]
+        public async Task<IActionResult> GetRevenueByMovie([FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
         {
-            return BadRequest(getData);
+            var result = await _revenueService.GetRevenueByMovieAsync(fromDate, toDate);
+            if (result.IsSuccess == false) return BadRequest(new { message = result.Message });
+            return Ok(new { message = result.Message, data = result.Data });
         }
-        return Ok(getData);
+
+        [HttpGet("GetRevenueByCinema")]
+        [Authorize(Policy = "Director")]
+        public async Task<IActionResult> GetRevenueByCinema([FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
+        {
+            var result = await _revenueService.GetRevenueByCinemaAsync(fromDate, toDate);
+            if (result.IsSuccess == false) return BadRequest(new { message = result.Message });
+            return Ok(new { message = result.Message, data = result.Data });
+        }
     }
 }

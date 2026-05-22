@@ -1,9 +1,9 @@
-﻿using backend.Enum;
+﻿using backend.DTOs.Requests;
 using backend.Interface.CommentInterface;
-using backend.ModelDTO.CommentDTO.CommentRequest;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace backend.Controllers
 {
@@ -11,70 +11,74 @@ namespace backend.Controllers
     [ApiController]
     public class CommentController : ControllerBase
     {
-        private readonly ICommentServices _services;
+        private readonly ICommentService _commentService;
 
-        public CommentController(ICommentServices services)
+        public CommentController(ICommentService commentService)
         {
-            _services = services;
+            _commentService = commentService;
         }
 
-        [HttpGet("getComment/{movieID}")]
+        [HttpGet("GetCommentsByMovie/{movieId}")]
         [AllowAnonymous]
-        public IActionResult getCommentList(string movieID)
+        public async Task<IActionResult> GetCommentsByMovie(string movieId)
         {
-            var listComment = _services.getAllComent(movieID);
-            if (listComment.Status.Equals(GenericStatusEnum.Success.ToString()))
+            var result = await _commentService.GetCommentsByMovieAsync(movieId);
+            if (result.IsSuccess == false)
             {
-                return Ok(listComment);
+                return BadRequest(new { message = result.Message });
             }
-            return BadRequest(listComment);
+            return Ok(new { message = result.Message, data = result.Data });
         }
 
-        [HttpGet("getCommentDetail/{commentID}")]
-        public IActionResult getCommentDetail(string commentID)
+        [HttpPost("AddComment")]
+        [Authorize]
+        public async Task<IActionResult> AddComment([FromBody] CreateCommentRequestDTO request)
         {
-            var getComment = _services.getCommentDetails(commentID);
-            if (getComment.Status.Equals(GenericStatusEnum.Success.ToString()))
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
             {
-                return Ok(getComment);
+                return Unauthorized(new { message = "Người dùng không hợp lệ" });
             }
-            return BadRequest(getComment);
+
+            var result = await _commentService.AddCommentAsync(userId, request);
+            if (result.IsSuccess == false)
+            {
+                return BadRequest(new { message = result.Message });
+            }
+            return Ok(new { message = result.Message, data = result.Data });
         }
 
-        [HttpPost("uploadComment/{userID}/{movieID}")]
-        [Authorize(Policy = "Customer")]
-        public async Task<IActionResult> postComment(string userID , string movieID , string commentDetail)
+        [HttpPut("UpdateComment/{commentId}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateComment(string commentId, [FromBody] UpdateCommentRequestDTO request)
         {
-            var getStatus = await _services.uploadComment(userID, movieID, commentDetail);
-            if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
             {
-                return BadRequest(getStatus);
+                return Unauthorized(new { message = "Người dùng không hợp lệ" });
             }
-            return Ok(getStatus);
+
+            var result = await _commentService.UpdateCommentAsync(userId, commentId, request);
+            if (result.IsSuccess == false)
+            {
+                return BadRequest(new { message = result.Message });
+            }
+            return Ok(new { message = result.Message });
         }
 
-        [HttpPatch("editComment/{commentID}")]
-        [Authorize(Policy = "Customer")]
-        public async Task<IActionResult> editComment(string commentID, string commentDetail)
+        [HttpDelete("DeleteComment/{commentId}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteComment(string commentId)
         {
-            var getStatus = await _services.editComment(commentID, commentDetail);
-            if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
-            {
-                return BadRequest(getStatus);
-            }
-            return Ok(getStatus);
-        }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized(new { message = "Người dùng không hợp lệ" });
 
-        [HttpDelete("deleteComment/{commentID}")]
-        [Authorize(Policy = "Customer")]
-        public async Task<IActionResult> deleteComment(string commentID)
-        {
-            var getStatus = await _services.deleteComment(commentID);
-            if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            var result = await _commentService.DeleteCommentAsync(userId, commentId);
+            if (result.IsSuccess == false)
             {
-                return NotFound(getStatus);
+                return BadRequest(new { message = result.Message });
             }
-            return Ok(getStatus);
+            return Ok(new { message = result.Message });
         }
     }
 }

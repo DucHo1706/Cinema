@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 
 namespace backend.Interface.VnpayInterface
 {
     public interface IVnpayService
     {
-        string createURL(long amout, string orderID , HttpContext httpContext);
-
-        Task<IActionResult> callbackURL();
+        Task<(bool IsSuccess, string Message, object? Data)> PaymentCallbackAsync(IQueryCollection collections);
     }
 }

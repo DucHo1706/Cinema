@@ -1,10 +1,9 @@
-﻿using backend.Enum;
+﻿using backend.DTOs.Requests;
 using backend.Interface.BookingInterface;
-using backend.ModelDTO.Customer.OrderRequest;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace backend.Controllers
 {
@@ -12,25 +11,29 @@ namespace backend.Controllers
     [ApiController]
     public class BookingController : ControllerBase
     {
-        private readonly IBookingServices _services;
+        private readonly IBookingService _bookingService;
 
-        public BookingController(IBookingServices services)
+        public BookingController(IBookingService bookingService)
         {
-            _services = services;
+            _bookingService = bookingService;
         }
 
-        [HttpPost("Booking")]
+        [HttpPost("CreateBooking")]
         [Authorize(Policy = "Customer")]
-        public async Task<IActionResult> booking(OrderRequestDTO dtos)
+        public async Task<IActionResult> CreateBooking([FromBody] BookingRequestDTO request)
         {
-            var getBookingstatus = await _services.booking(dtos , HttpContext);
-            if (getBookingstatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
-            { 
-                return BadRequest(getBookingstatus);
-
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { message = "Người dùng không hợp lệ." });
             }
-            return Ok(getBookingstatus);
-            
+
+            var result = await _bookingService.CreateBookingAsync(userId, request, HttpContext);
+            if (result.IsSuccess == false)
+            {
+                return BadRequest(new { message = result.Message, data = result.Data });
+            }
+            return Ok(new { message = result.Message, data = result.Data });
         }
     }
 }

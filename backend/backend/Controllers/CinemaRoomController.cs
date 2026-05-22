@@ -1,8 +1,9 @@
-using backend.Enum;
-using backend.Interface.RoomInferface;
-using backend.ModelDTO.RoomDTOS;
+using backend.Interface.RoomInterface;
+using backend.DTOs.Requests;
+using backend.DTOs.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace backend.Controllers; 
 
@@ -18,50 +19,41 @@ public class CinemaRoomController : ControllerBase
         _roomService = roomService;
     }
 
-    // GET: api/CinemaRoom/GetRoomInfo?movieID=...&scheduleDate=...&HourId=...&movieVisualID=...
-    [HttpGet("GetRoomInfo")]
-    public IActionResult GetRoomInfo(
-        [FromQuery] string movieID,
-        [FromQuery] DateTime scheduleDate,
-        [FromQuery] string HourId,
-        [FromQuery] string movieVisualID)
-    {
-        var result = _roomService.getRoomInfo(movieID, scheduleDate, HourId, movieVisualID);
-        if (result.Status.Equals(GenericStatusEnum.Failure.ToString()))
-        {
-            return BadRequest(result);
-        }
-        return Ok(result);
-    }
-
-
     // POST: api/CinemaRoom/CreateRoom
     [HttpPost("CreateRoom")]
     [Authorize(Policy = "FacilitiesManager")]
-    public async Task<IActionResult> CreateRoom([FromBody] RoomCreateRequestDTO roomCreateRequestDTO)
+    public async Task<IActionResult> CreateRoom([FromBody] CreateRoomRequestDTO request)
     {
-        var result = await _roomService.CreateRoom(roomCreateRequestDTO);
-        if (result.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        if (request == null)
         {
-            return BadRequest(result);
+            return BadRequest(new { message = "Dữ liệu không được để trống." });
         }
-        return Ok(result);
+
+        var result = await _roomService.CreateRoomAsync(request);
+        if (result.IsSuccess == false)
+        {
+            return BadRequest(new { message = result.Message });
+        }
+        return Ok(new { message = result.Message, data = result.Data });
     }
 
 
     // PUT: api/CinemaRoom/UpdateRoom/{RoomId}
     [HttpPut("UpdateRoom/{RoomId}")]
     [Authorize(Policy = "FacilitiesManager")]
-    public async Task<IActionResult> UpdateRoom(
-        [FromRoute] string RoomId, // Lấy RoomId từ URL Segment
-        [FromBody] RoomEditRequestDTO roomEditRequestDTO)
+    public async Task<IActionResult> UpdateRoom([FromRoute] string RoomId, [FromBody] UpdateRoomRequestDTO request)
     {
-        var result = await _roomService.UpdateRoom(RoomId, roomEditRequestDTO);
-        if (result.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        if (request == null)
         {
-            return BadRequest(result);
+            return BadRequest(new { message = "Dữ liệu không được để trống." });
         }
-        return Ok(result);
+
+        var result = await _roomService.UpdateRoomAsync(RoomId, request);
+        if (result.IsSuccess == false)
+        {
+            return BadRequest(new { message = result.Message });
+        }
+        return Ok(new { message = result.Message });
     }
 
 
@@ -70,61 +62,50 @@ public class CinemaRoomController : ControllerBase
     [Authorize(Policy = "FacilitiesManager")]
     public async Task<IActionResult> DeleteRoom([FromRoute] string RoomId)
     {
-        var result = await _roomService.DeleteRoom(RoomId);
-        if (result.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        var result = await _roomService.DeleteRoomAsync(RoomId);
+        if (result.IsSuccess == false)
         {
-            return BadRequest(result);
+            return BadRequest(new { message = result.Message });
         }
-        return Ok(result);
+        return Ok(new { message = result.Message });
     }
 
 
     // GET: api/CinemaRoom/GetRoomList
     [HttpGet("GetRoomList")]
-    public IActionResult GetRoomList()
+    public async Task<IActionResult> GetRoomList()
     {
-        var result = _roomService.GetRoomList();
-        if (result.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        var result = await _roomService.GetRoomListAsync();
+        if (result.IsSuccess == false)
         {
-            return BadRequest(result);
+            return BadRequest(new { message = result.Message });
         }
-        return Ok(result);
+        return Ok(new { message = result.Message, data = result.Data });
     }
 
 
     // GET: api/CinemaRoom/SearchRoomByCinemaId?CinemaId=...
     [HttpGet("SearchRoomByCinemaId")]
-    public IActionResult SearchRoomByCinemaId([FromQuery] string CinemaId)
+    public async Task<IActionResult> SearchRoomByCinemaId([FromQuery] string CinemaId)
     {
-        var result = _roomService.SearchRoomByCinemaId(CinemaId);
-        if (result.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        var result = await _roomService.SearchRoomByCinemaIdAsync(CinemaId);
+        if (result.IsSuccess == false)
         {
-            return BadRequest(result);
+            return BadRequest(new { message = result.Message });
         }
-        return Ok(result);
+        return Ok(new { message = result.Message, data = result.Data });
     }
 
 
     // GET: api/CinemaRoom/GetRoomDetail/{roomId}
     [HttpGet("GetRoomDetail/{roomId}")]
-    public IActionResult GetRoomDetail([FromRoute] string roomId)
+    public async Task<IActionResult> GetRoomDetail([FromRoute] string roomId)
     {
-        var result = _roomService.GetRoomDetail(roomId);
-        if (result.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        var result = await _roomService.GetRoomDetailAsync(roomId);
+        if (result.IsSuccess == false)
         {
-            return BadRequest(result);
+            return NotFound(new { message = result.Message });
         }
-        return Ok(result);
-    }
-
-    [HttpGet("GetRoomByCinemaIdAndVisualId")]
-    public IActionResult GetRoomByCinemaIdAndVisualId(string cinemaId, string visualId)
-    {
-        var result = _roomService.GetRoomListByVisualAndCinemaId(cinemaId, visualId);
-        if (result.Status.Equals(GenericStatusEnum.Failure.ToString()))
-        {
-            return BadRequest(result);
-        }
-        return Ok(result);
+        return Ok(new { message = result.Message, data = result.Data });
     }
 }

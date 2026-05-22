@@ -1,6 +1,5 @@
 ﻿using backend.Data;
 using backend.Interface.Auth;
-using backend.Model.Auth;
 using backend.Services.Auth;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
@@ -11,8 +10,6 @@ using backend;
 using backend.Helper;
 using backend.Hosted;
 using backend.Interface.Account;
-using backend.Interface.GenericsInterface;
-using backend.ModelDTO.MoviesDTO.MovieRequest;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using backend.Interface.MovieInterface;
@@ -25,35 +22,27 @@ using backend.Interface.CommentInterface;
 using backend.Interface.CloudinaryInterface;
 using backend.Interface.EmailInterface;
 using backend.Interface.FoodInterface;
-using backend.Interface.MovieGenreInterface;
-using backend.Interface.PDFInterface;
-using backend.Interface.PriceInterfaces;
-using backend.Interface.RevenueInterface;
-using backend.Interface.RoomInferface;
 using backend.Interface.StaffInterface;
-using backend.Interface.VisualFormatInterface;
 using backend.Services.CloudinaryServices;
 using backend.Interface.VnpayInterface;
 using backend.Services.VnpayServices;
-using Microsoft.Extensions.Logging;
-using backend.ModelDTO.BookingHistoryDTO.OrderDetailRespond;
-using backend.ModelDTO.BookingHistoryDTO.OrderRespond;
-using backend.ModelDTO.PDFDTO;
 using backend.Services.AccountServices;
 using backend.Services.BookingHistoryServices;
 using backend.Services.CinemaServices;
 using backend.Services.EmailServices;
 using backend.Services.FoodServices;
-using backend.Services.MovieGenreServices;
-using backend.Services.MovieVisualServices;
-using backend.Services.PDFServices;
-using backend.Services.PriceServices;
 using backend.Services.RevenueServices;
 using backend.Services.RoomServices;
-using backend.Services.StaffService;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Identity.Client;
+using backend.Interface.GenreInterface;
+using backend.Interface.RoomInterface;
+using backend.Services.CommentService;
+using backend.Services.GenreServices;
+using backend.Services.StaffServices;
+using backend.Interface.CloudinaryInterface;
+using backend.Services.CloudinaryServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,7 +56,15 @@ builder.Services.AddControllers().AddJsonOptions(x =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<DataContext>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlServerOptionsAction: sqlOptions =>
+        {
+            // Bật tính năng tự động thử lại khi rớt mạng
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5, // Thử lại tối đa 5 lần
+                maxRetryDelay: TimeSpan.FromSeconds(30), // Thời gian chờ tối đa giữa các lần thử
+                errorNumbersToAdd: null);
+        }));
 
 // Add thêm Policy
 
@@ -122,24 +119,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(UTF8Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
     });
-// Add thêm DI của các services
-// Auth services
-builder.Services.AddScoped<IAuth, AuthService>();
-
-// Add Scoped
-
-builder.Services.AddScoped<ICloudinaryServices, CloudinaryService>();
-
-builder.Services.AddScoped<ICommentServices, CommentServices>();
-
-builder.Services.AddScoped<IRoomService , RoomService>();
-
-// DI của VNpay Services
-
-builder.Services.AddScoped<IVnpayService, VnpayService>();
-
-builder.Services.AddSingleton<BackgroundService , HostedService>();
-builder.Services.AddHostedService<HostedService>();
 
 // DI cua Price
 
@@ -158,61 +137,21 @@ builder.Services.AddSingleton<IDataProtector>(serviceProvider => {
     // Chuỗi này PHẢI DUY NHẤT cho mục đích mã hóa này trong ứng dụng của bạn.
     return dataProtectionProvider.CreateProtector("CitizenIdEncryptionPurpose");
 });
-// DI cuar Revune
-builder.Services.AddScoped<IRevenueService, RevenueService>();
-// DI cua Price
-builder.Services.AddScoped<IPriceService, PriceService>();
-
-// DI cua Food
-
-builder.Services.AddScoped<IFoodService, FoodService>();
-
-// Add thêm DI của services Movie dạng Scoped
-
-builder.Services.AddScoped<IMovieService, movieServices>();
-
-// Add thêm DI của Cinema
-
-builder.Services.AddScoped<ICinemaService, CinemaService>();
-// DI cua Email
-builder.Services.AddScoped<IEmailService, EmailService>();
-// DI cua Staff
-builder.Services.AddScoped<IStaffService, StaffService>();
-// DI MovieSchedule
-
-builder.Services.AddScoped<IScheduleServices, ScheduleServices>();
-
-// DI của Booking
-
-builder.Services.AddScoped<IBookingServices, BookingServices>();
-
-// DI của Hash Helper
-
-builder.Services.AddSingleton<HashHelper>();
-
-// DI cua Order
-
-builder.Services.AddScoped<IStaffOrderService , StaffOrderService>();
-
-// DI cua Account Service
-
+// Đăng ký toàn bộ Service theo chuẩn Database mới
 builder.Services.AddScoped<IAccountService, AccountService>();
-
-builder.Services.AddScoped<VNPAY.NET.IVnpay, VNPAY.NET.Vnpay>();
-
-builder.Services.AddScoped
-    <GenericInterface<BookingHistoryRespondList, OrderDetailRespond>, OrderDetailServices>();
-
-builder.Services.AddCors(x => x.AddPolicy("AllowAll", builder =>
-{
-    builder.WithOrigins("http://localhost:3000").AllowAnyMethod().AllowAnyHeader();
-}));
-
-builder.Services.AddScoped<IMovieVisualFormatService, MovieVisualService>();
-
-builder.Services.AddScoped<IMovieGenreService, MovieGenreService>();
-
-builder.Services.AddSingleton<IPDFService<GenerateCustomerBookingDTO, GenerateStaffBookingDTO>, PDFService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IBookingHistoryService, BookingHistoryService>();
+builder.Services.AddScoped<ICinemaService, CinemaService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IFoodService, FoodService>();
+builder.Services.AddScoped<IGenreService, GenreService>();
+builder.Services.AddScoped<IMovieService, MovieService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IScheduleServices, ScheduleServices>();
+builder.Services.AddScoped<IStaffService, StaffService>();
+builder.Services.AddScoped<ICloudinaryServices, CloudinaryService>();
 
 Console.WriteLine(builder.Configuration.GetConnectionString("DefaultConnection"));
 

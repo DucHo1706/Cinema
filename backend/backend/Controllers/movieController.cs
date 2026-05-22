@@ -1,125 +1,98 @@
-﻿using backend.Interface.GenericsInterface;
-using backend.ModelDTO.MoviesDTO.MovieRequest;
-using Microsoft.AspNetCore.Http;
+﻿using backend.Interface.MovieInterface;
+using backend.DTOs.Requests;
+using backend.DTOs.Responses;
 using Microsoft.AspNetCore.Mvc;
-using BCrypt.Net;
-using backend.Interface.MovieInterface;
 using Microsoft.AspNetCore.Authorization;
-using backend.Enum;
+using System.Threading.Tasks;
+
 namespace backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class movieController : ControllerBase
     {
-        private readonly IMovieService IMovieService;
+        private readonly IMovieService _movieService;
 
-        public movieController(IMovieService IMovieService)
+        public movieController(IMovieService movieService)
         {
-            this.IMovieService = IMovieService;
+            _movieService = movieService;
         }
 
         [HttpPost("createMovie")]
         [Authorize(Policy = "MovieManager")]
-        public async Task<IActionResult> createMovie([FromForm] MovieRequestDTO movieRequestDTO) 
+        public async Task<IActionResult> createMovie([FromForm] CreateMovieRequestDTO request) 
         {
-            var createdStatus = await IMovieService.add(movieRequestDTO);
-            
-            if (createdStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            var result = await _movieService.CreateMovieAsync(request);
+            if (result.IsSuccess == false)
             {
-                return BadRequest(new { ThongTinLoi = createdStatus});
+                return BadRequest(new { message = result.Message });
             }
-            return Created();
+            return Ok(new { message = result.Message, data = result.Data });
         }
-        [Authorize(Policy = "MovieManager")]
+
         [HttpPatch("editMovie")]
-        public async Task<IActionResult> editMovie([FromQuery] string movieID , [FromForm] MovieEditRequestDTO dtos)
+        [Authorize(Policy = "MovieManager")]
+        public async Task<IActionResult> editMovie([FromQuery] string movieID, [FromForm] UpdateMovieRequestDTO request)
         {
-            var status = await IMovieService.edit(movieID, dtos);
-            if (status.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            var result = await _movieService.UpdateMovieAsync(movieID, request);
+            if (result.IsSuccess == false)
             {
-                return BadRequest(new { ThongTinLoi = status });
+                return BadRequest(new { message = result.Message });
             }
-            return Ok(new { ThongBao = status });
+            return Ok(new { message = result.Message });
         }
 
         [HttpGet("getMovieDetail/{movieID}")]
-        public IActionResult getMovieDetail(string movieID)
+        public async Task<IActionResult> getMovieDetail(string movieID)
         {
-            var getMovieDetail = IMovieService.getMovieDetail(movieID);
-            if (getMovieDetail.Status.Equals(GenericStatusEnum.Success.ToString()))
+            var result = await _movieService.GetMovieDetailAsync(movieID);
+            if (result.IsSuccess == false)
             {
-                return Ok(getMovieDetail);
+                return BadRequest(new { message = result.Message });
             }
-            return BadRequest(getMovieDetail);
+            return Ok(new { message = result.Message, data = result.Data });
         }
-        [Authorize(Policy = "MovieManager")]
+
         [HttpDelete("DeleteMovie/{Id}")]
+        [Authorize(Policy = "MovieManager")]
         public async Task<IActionResult> deleteMovie(string Id)
         {
-            var deleteStatus = await IMovieService.remove(Id);
-      
-            if (deleteStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            var result = await _movieService.DeleteMovieAsync(Id);
+            if (result.IsSuccess == false)
             {
-                return BadRequest(deleteStatus);
+                return BadRequest(new { message = result.Message });
             }
-            return Ok(deleteStatus);
+            return Ok(new { message = result.Message });
         }
 
         [HttpGet("getAllMoviesPagniation/{page}")]
         public async Task<IActionResult> getAllMoviesPagniation(int page)
         {
-            if (page <= 0)
-            {
-                return NotFound("Sorry Page not found");
-            }
+            if (page <= 0) return NotFound(new { message = "Sorry Page not found" });
 
-            var getitemsList = await IMovieService.getListItemsPagination(page);
-            if (getitemsList != null)
-            {
-                return Ok(getitemsList);
-            }
-            return NotFound(new { message = "Cannot Find Movie There's an error" });
-        }
-        
-        [HttpGet("SearchMovieTake5")]
-        public async Task<IActionResult> SearchMovieTake5(string movieName)
-        {
-            var gettersList = await IMovieService.getListMoviesByNameTake5(movieName);
-            if (gettersList.Count > 0)
-            {
-                return Ok(gettersList);
-            }
-            return NotFound(new { message = "Cannot Find Movie There's an error" });
+            var result = await _movieService.GetMoviesPaginationAsync(page);
+            return Ok(new { message = result.Message, data = result.Data });
         }
         
         [HttpGet("SearchAllMovie")]
-        public async Task<IActionResult> SearchMovieTake5(string movieName , int page)
+        public async Task<IActionResult> SearchMoviePagination(string movieName, int page)
         {
-            var gettersList = await IMovieService.getFullSearchResult(movieName , page);
-            return Ok(gettersList);
+            var result = await _movieService.SearchMoviesPaginationAsync(movieName, page);
+            return Ok(new { message = result.Message, data = result.Data });
         }
 
         [HttpGet("GetInShowedMovie")]
         public async Task<IActionResult> GetInShowedMovie()
         {
-            var getData = await IMovieService.GetShowedMovieTake5();
-            if (getData.Status.Equals(GenericStatusEnum.Success.ToString()))
-            {
-                return Ok(getData);
-            }
-            return NotFound(new { message = "Cannot Find Movie There's an error" });
+            var result = await _movieService.GetShowingMoviesTake5Async();
+            return Ok(new { message = result.Message, data = result.Data });
         }
 
         [HttpGet("GetUnShowedMovie")]
         public async Task<IActionResult> GetUnShowedMovie()
         {
-            var getData = await IMovieService.GetUnShowedMovieTake5();
-            if (getData.Status.Equals(GenericStatusEnum.Success.ToString()))
-            {
-                return Ok(getData);
-            }
-            return NotFound(new { message = "Cannot Find Movie There's an error" });
+            var result = await _movieService.GetUpcomingMoviesTake5Async();
+            return Ok(new { message = result.Message, data = result.Data });
         }
     }
 }
