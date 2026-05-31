@@ -30,25 +30,32 @@ function Login() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    loginUserName: email,
-                    loginUserPassword: password
+                    email: email,
+                    password: password
                 }),
             });
 
             if (response.ok) {
                 const data = await response.json();
-                if (data.tokenID) {
-                    localStorage.setItem('authToken', data.tokenID);
-                    localStorage.setItem('role', data.roleName);
+                
+                // Hỗ trợ cả 2 trường hợp API gói data bên trong { data: ... } hoặc trả trực tiếp object
+                const userData = data.data || data;
+                
+                if (userData.token) {
+                    localStorage.setItem('authToken', userData.token);
+                    localStorage.setItem('role', userData.roleName);
                     localStorage.setItem('Password', password);
                     localStorage.setItem('Email', email);
-                    localStorage.setItem('IDND', data.userID);
+                    localStorage.setItem('IDND', userData.userId);
+                    localStorage.setItem('userEmail', email);
+                    
+                    setModalMessage("Đăng nhập thành công!");
+                    setShowModal(true);
+                    navigate('/');
+                } else {
+                    setModalMessage("Lỗi: Không nhận được token từ máy chủ!");
+                    setShowModal(true);
                 }
-                console.log(localStorage.getItem('IDND'));
-                localStorage.setItem('userEmail', email);
-                setModalMessage("Đăng nhập thành công!");
-                setShowModal(true);
-                navigate('/');
             } else {
                 const errorData = await response.json();
                 setModalMessage(errorData.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại Email và Mật khẩu.");

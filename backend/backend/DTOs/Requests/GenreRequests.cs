@@ -6,11 +6,13 @@ namespace backend.DTOs.Requests
     {
         [Required]
         public string Name { get; set; }
+        public string? Description { get; set; }
     }
 
     public class UpdateGenreRequestDTO
     {
         [Required]
         public string Name { get; set; }
+        public string? Description { get; set; }
     }
 }

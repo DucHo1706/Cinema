@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace backend.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class GenreController : ControllerBase
     {
         private readonly IGenreService _genreService;
@@ -17,39 +17,36 @@ namespace backend.Controllers
             _genreService = genreService;
         }
 
-        [HttpGet("GetAllGenres")]
+        [HttpGet]
+        [AllowAnonymous] // Ai cũng có thể xem danh sách thể loại
         public async Task<IActionResult> GetAllGenres()
         {
             var result = await _genreService.GetAllGenresAsync();
-            if (result.IsSuccess == false) return BadRequest(new { message = result.Message });
-            return Ok(new { message = result.Message, data = result.Data });
+            
+            if (!result.IsSuccess)
+                return BadRequest(new { status = "Error", message = result.Message });
+
+            return Ok(new { status = "Success", message = result.Message, data = result.Data });
         }
 
-        [HttpPost("CreateGenre")]
-        [Authorize(Policy = "MovieManager")]
+        [HttpPost]
+        [Authorize(Roles = RoleConstants.MovieManager)] // Phải là MovieManager hoặc Director mới được Thêm
         public async Task<IActionResult> CreateGenre([FromBody] CreateGenreRequestDTO request)
         {
             var result = await _genreService.CreateGenreAsync(request);
-            if (result.IsSuccess == false) return BadRequest(new { message = result.Message });
-            return Ok(new { message = result.Message, data = result.Data });
+            if (!result.IsSuccess) return BadRequest(new { status = "Error", message = result.Message });
+            
+            return Ok(new { status = "Success", message = result.Message, data = result.Data });
         }
 
-        [HttpPut("UpdateGenre/{genreId}")]
-        [Authorize(Policy = "MovieManager")]
-        public async Task<IActionResult> UpdateGenre(string genreId, [FromBody] UpdateGenreRequestDTO request)
+        [HttpDelete("{id}")]
+        [Authorize(Roles = RoleConstants.MovieManager)]
+        public async Task<IActionResult> DeleteGenre(string id)
         {
-            var result = await _genreService.UpdateGenreAsync(genreId, request);
-            if (result.IsSuccess == false) return BadRequest(new { message = result.Message });
-            return Ok(new { message = result.Message });
-        }
-
-        [HttpDelete("DeleteGenre/{genreId}")]
-        [Authorize(Policy = "MovieManager")]
-        public async Task<IActionResult> DeleteGenre(string genreId)
-        {
-            var result = await _genreService.DeleteGenreAsync(genreId);
-            if (result.IsSuccess == false) return BadRequest(new { message = result.Message });
-            return Ok(new { message = result.Message });
+            var result = await _genreService.DeleteGenreAsync(id);
+            if (!result.IsSuccess) return BadRequest(new { status = "Error", message = result.Message });
+            
+            return Ok(new { status = "Success", message = result.Message });
         }
     }
 }

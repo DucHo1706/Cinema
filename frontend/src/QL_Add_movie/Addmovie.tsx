@@ -11,22 +11,6 @@ interface Genre {
     genreName: string;
 }
 
-interface AgeOption {
-    minimumAgeID: string;
-    minimumAgeInfo: number;
-    minimumAgeDescription: string;
-}
-
-interface Language {
-    languageId: string;
-    languageDetail: string;
-}
-
-interface VisualFormat {
-    movieVisualId: string;
-    movieVisualFormatDetail: string;
-}
-
 interface Movie {
     movieId?: string;
     name: string;
@@ -40,7 +24,6 @@ interface Movie {
     language: string;
     releaseDate: string;
     genres: string[];
-    dinhdang: string[];
 }
 
 interface ErrorResponse {
@@ -73,9 +56,8 @@ const TOKEN = localStorage.getItem('authToken');
 
 const AddMovie: React.FC = () => {
     const [theloaiOptions, setTheloaiOptions] = useState<Genre[]>([]);
-    const [dinhDangOptions, setDinhDangOptions] = useState<VisualFormat[]>([]);
-    const [ageOptions, setAgeOptions] = useState<AgeOption[]>([]);
-    const [languageOptions, setLanguageOptions] = useState<Language[]>([]);
+    const [ageOptions] = useState<string[]>(['P (Mọi lứa tuổi)', 'T13 (Từ 13 tuổi)', 'T16 (Từ 16 tuổi)', 'T18 (Từ 18 tuổi)', 'K (Khác)']);
+    const [languageOptions] = useState<string[]>(['Tiếng Việt', 'Tiếng Anh (Phụ đề Việt)', 'Tiếng Hàn (Phụ đề Việt)', 'Tiếng Nhật (Phụ đề Việt)', 'Lồng Tiếng']);
     const [movies, setMovies] = useState<Movie[]>([]);
     const [form, setForm] = useState<FormState>({
         name: "",
@@ -89,7 +71,6 @@ const AddMovie: React.FC = () => {
         ageId: "",
     });
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-    const [selectedDinhdang, setSelectedDinhdang] = useState<string[]>([]);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [loi, setLoi] = useState("");
     const [thanhCong, setThanhCong] = useState("");
@@ -154,11 +135,10 @@ const AddMovie: React.FC = () => {
                     cast: item.movieActor || "Không có diễn viên",
                     trailer: item.movieTrailerUrl || "",
                     duration: item.movieDuration || 0,
-                    ageLimit: item.minimumAgeID || "",
-                    language: item.listLanguageName || "Không có ngôn ngữ",
+                    ageLimit: item.ageRating || "",
+                    language: item.language || "Không có ngôn ngữ",
                     releaseDate: item.releaseDate ? new Date(item.releaseDate).toLocaleDateString() : "Không có ngày",
                     genres: item.movieGenres || [],
-                    dinhdang: item.movieVisualFormat || [],
                 }));
                 setMovies(formattedMovies);
                 setTotalPages(Math.ceil(data.totalCount / data.pageSize));
@@ -175,25 +155,17 @@ const AddMovie: React.FC = () => {
         }
 
         fetchData(
-            "http://localhost:5229/api/MovieGenre/GetMovieGenreList",
-            setTheloaiOptions,
-            "Không thể tải danh sách thể loại"
+            "http://localhost:5229/api/Genre",
+            (data) => {
+                // Hỗ trợ cả object response.data hoặc array trực tiếp
+                const items = data.data || data;
+                if (Array.isArray(items)) {
+                    setTheloaiOptions(items.map((item: any) => ({ genreId: item.id || item.genreId, genreName: item.name || item.genreName })));
+                }
+            },
+            "Lưu ý: API thể loại có thể đã đổi sang /api/Genre"
         );
-        fetchData(
-            "http://localhost:5229/api/MovieVisualFormat/GetMovieVisualFormatList",
-            setDinhDangOptions,
-            "Không thể tải danh sách định dạng"
-        );
-        fetchData(
-            "http://localhost:5229/api/MinimumAge/GetMinimumAge",
-            setAgeOptions,
-            "Không thể tải danh sách độ tuổi"
-        );
-        fetchData(
-            "http://localhost:5229/api/Language/GetLanguage",
-            setLanguageOptions,
-            "Không thể tải danh sách ngôn ngữ"
-        );
+
         fetchMovies(page);
     }, [page]);
 
@@ -208,17 +180,6 @@ const AddMovie: React.FC = () => {
         if (selected && !selectedGenres.includes(selected)) {
             setSelectedGenres((prev) => [...prev, selected]);
         }
-    };
-
-    const handleDinhDangChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const d = e.target.value;
-        if (d && !selectedDinhdang.includes(d)) {
-            setSelectedDinhdang((prev) => [...prev, d]);
-        }
-    };
-
-    const removeDinhdang = (toRemove: string) => {
-        setSelectedDinhdang(selectedDinhdang.filter((item) => item !== toRemove));
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -296,11 +257,6 @@ const AddMovie: React.FC = () => {
             setIsSubmitting(false);
             return;
         }
-        if (selectedDinhdang.length === 0) {
-            setLoi("Vui lòng chọn ít nhất một định dạng");
-            setIsSubmitting(false);
-            return;
-        }
         if (!selectedFile && editIndex === null) {
             setLoi("Vui lòng chọn poster phim");
             setIsSubmitting(false);
@@ -318,19 +274,18 @@ const AddMovie: React.FC = () => {
         }
         
         const formData = new FormData();
-        formData.append("movieName", form.name);
-        formData.append("movieDescription", form.description);
-        formData.append("movieDuration", form.duration);
-        formData.append("movieActor", form.actor);
-        formData.append("movieDirector", form.director);
-        formData.append("movieTrailerUrl", form.trailer);
-        formData.append("releaseDate", parsedDate.toISOString());
-        formData.append("languageId", form.languageId);
-        formData.append("minimumAgeID", form.ageId);
-        selectedGenres.forEach((genreId) => formData.append("movieGenreList", genreId));
-        selectedDinhdang.forEach((formatId) => formData.append("visualFormatList", formatId));
+        formData.append("Title", form.name);
+        formData.append("Description", form.description);
+        formData.append("DurationMinutes", form.duration);
+        formData.append("Cast", form.actor);
+        formData.append("Director", form.director);
+        formData.append("TrailerUrl", form.trailer);
+        formData.append("ReleaseDate", parsedDate.toISOString());
+        formData.append("Language", form.languageId);
+        formData.append("AgeRating", form.ageId);
+        selectedGenres.forEach((genreId) => formData.append("GenreIds", genreId));
         if (selectedFile) {
-            formData.append("movieImage", selectedFile);
+            formData.append("PosterFile", selectedFile);
         }
 
         try {
@@ -367,7 +322,6 @@ const AddMovie: React.FC = () => {
                 });
                 setSelectedFile(null);
                 setSelectedGenres([]);
-                setSelectedDinhdang([]);
                 setEditIndex(null);
             } else {
                 throw new Error(`Lỗi từ server: ${res.status}`);
@@ -424,27 +378,22 @@ const AddMovie: React.FC = () => {
 
             const movieDetails = result.data;
 
-            // Trích xuất ID từ phản hồi chi tiết
-            const languageId = movieDetails.movieLanguage ? Object.keys(movieDetails.movieLanguage)[0] : "";
-            const ageId = movieDetails.movieMinimumAge ? Object.keys(movieDetails.movieMinimumAge)[0] : "";
-            const genreIds = movieDetails.movieGenre.map((g: any) => g.movieGenreId);
-            const formatIds = movieDetails.movieVisualFormat.map((f: any) => f.movieVisualFormatId);
+            const genreIds = movieDetails.genres ? movieDetails.genres.map((g: any) => g.id || g.genreId) : [];
 
             setForm({
-                name: movieDetails.movieName || "",
-                description: movieDetails.movieDescription || "",
-                duration: movieDetails.movieDuration?.toString() || "",
-                actor: movieDetails.movieActor || "",
-                director: movieDetails.movieDirector || "",
-                trailer: movieDetails.movieTrailerUrl || "",
+                name: movieDetails.title || movieDetails.movieName || "",
+                description: movieDetails.description || movieDetails.movieDescription || "",
+                duration: movieDetails.durationMinutes?.toString() || movieDetails.movieDuration?.toString() || "",
+                actor: movieDetails.cast || movieDetails.movieActor || "",
+                director: movieDetails.director || movieDetails.movieDirector || "",
+                trailer: movieDetails.trailerUrl || movieDetails.movieTrailerUrl || "",
                 // Định dạng ngày thành YYYY-MM-DD cho <input type="date">
                 releaseDate: movieDetails.releaseDate ? new Date(movieDetails.releaseDate).toISOString().split('T')[0] : "",
-                languageId: languageId,
-                ageId: ageId,
+                languageId: movieDetails.language || "",
+                ageId: movieDetails.ageRating || "",
             });
 
             setSelectedGenres(genreIds);
-            setSelectedDinhdang(formatIds);
             setSelectedFile(null); // Xóa lựa chọn tệp trước đó
             setEditIndex(index); // Theo dõi chỉ mục để gửi đi
             
@@ -556,13 +505,13 @@ const AddMovie: React.FC = () => {
                                     <option className="text-black bg-slate-600" value="">
                                         Chọn ngôn ngữ gốc
                                     </option>
-                                    {languageOptions.map((lang) => (
+                                    {languageOptions.map((lang, index) => (
                                         <option
-                                            key={lang.languageId}
-                                            value={lang.languageId}
+                                            key={index}
+                                            value={lang}
                                             className="text-black bg-slate-600"
                                         >
-                                            {lang.languageDetail}
+                                            {lang}
                                         </option>
                                     ))}
                                 </select>
@@ -576,13 +525,13 @@ const AddMovie: React.FC = () => {
                                         Chọn độ tuổi
                                     </option>
                                     {ageOptions.length > 0 ? (
-                                        ageOptions.map((age) => (
+                                        ageOptions.map((age, index) => (
                                             <option
-                                                key={age.minimumAgeID}
-                                                value={age.minimumAgeID}
+                                                key={index}
+                                                value={age}
                                                 className="text-black bg-slate-600"
                                             >
-                                                {age.minimumAgeInfo} - {age.minimumAgeDescription}
+                                                {age}
                                             </option>
                                         ))
                                     ) : (
@@ -680,55 +629,6 @@ const AddMovie: React.FC = () => {
                                         </option>
                                     )}
                                 </select>
-                                <label className="font-semibold block mt-4 text-white">Định dạng</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {selectedDinhdang.length > 0 ? (
-                                        selectedDinhdang.map((id) => {
-                                            const format = dinhDangOptions.find((d) => d.movieVisualId === id);
-                                            return (
-                                                <span
-                                                    key={id}
-                                                    className="bg-slate-500 px-3 py-1 rounded text-white flex items-center"
-                                                >
-                                                    {format?.movieVisualFormatDetail || "Unknown Format"}
-                                                    <button
-                                                        className="text-yellow-300 ml-2"
-                                                        onClick={() => removeDinhdang(id)}
-                                                    >
-                                                        ✕
-                                                    </button>
-                                                </span>
-                                            );
-                                        })
-                                    ) : (
-                                        <span className="text-slate-300">Chưa chọn định dạng</span>
-                                    )}
-                                </div>
-                                <select
-                                    onChange={handleDinhDangChange}
-                                    className="w-full p-2 border rounded bg-transparent text-white"
-                                >
-                                    <option className="text-black bg-slate-600" value="">
-                                        -- Chọn định dạng --
-                                    </option>
-                                    {dinhDangOptions.length > 0 ? (
-                                        dinhDangOptions
-                                            .filter((d) => !selectedDinhdang.includes(d.movieVisualId))
-                                            .map((d) => (
-                                                <option
-                                                    className="text-black bg-slate-600"
-                                                    key={d.movieVisualId}
-                                                    value={d.movieVisualId}
-                                                >
-                                                    {d.movieVisualFormatDetail}
-                                                </option>
-                                            ))
-                                    ) : (
-                                        <option className="text-black bg-slate-600" value="" disabled>
-                                            Không có định dạng
-                                        </option>
-                                    )}
-                                </select>
                             </div>
 
                             <div className="text-right mt-4 py-5">
@@ -787,7 +687,6 @@ const AddMovie: React.FC = () => {
                                             <th className="px-2 sm:px-4 py-2">Trailer</th>
                                             <th className="px-2 sm:px-4 py-2">Ngày ra mắt</th>
                                             <th className="px-2 sm:px-4 py-2">Ngôn ngữ</th>
-                                            <th className="px-2 sm:px-4 py-2">Định dạng</th>
                                             <th className="px-2 sm:px-4 py-2">Hành động</th>
                                         </tr>
                                     </thead>
@@ -826,9 +725,6 @@ const AddMovie: React.FC = () => {
                                                 </td>
                                                 <td className="text-white px-2 sm:px-4 py-2">{m.releaseDate || "Không có ngày"}</td>
                                                 <td className="text-white px-2 sm:px-4 py-2">{m.language || "Không có ngôn ngữ"}</td>
-                                                <td className="text-white px-2 sm:px-4 py-2">
-                                                    {m.dinhdang?.length > 0 ? m.dinhdang.join(", ") : "Không có định dạng"}
-                                                </td>
                                                 <td className="text-white px-2 sm:px-4 py-2 flex flex-row gap-2 justify-center items-center h-24">
                                                     <button
                                                         onClick={() => handleEdit(i)}

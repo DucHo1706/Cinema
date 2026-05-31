@@ -33,7 +33,6 @@
   <ItemGroup>
     <Folder Include="DTOs\Responses\" />
     <Folder Include="DTOs\Requests\" />
-    <Folder Include="Interface\GenericsInterface\" />
     <Folder Include="Interface\RevenueInterface\" />
     <Folder Include="Interface\StaffInterface\" />
     <Folder Include="Interface\StaffOrderInterface\" />

@@ -12,6 +12,7 @@ namespace backend.Models
         [Required]
         [MaxLength(100)]
         public string Name { get; set; }
+        public string? Description { get; set; }
 
         public virtual ICollection<MovieGenre> MovieGenres { get; set; }
     }

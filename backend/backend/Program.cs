@@ -1,4 +1,4 @@
-﻿using backend.Data;
+﻿﻿﻿﻿using backend.Data;
 using backend.Interface.Auth;
 using backend.Services.Auth;
 using Microsoft.EntityFrameworkCore;
@@ -68,40 +68,16 @@ builder.Services.AddDbContext<DataContext>(options =>
 
 // Add thêm Policy
 
-builder.Services.AddAuthorization(
-    options =>
-    {
-        options.AddPolicy("Customer", policy =>
-        {
-            policy.RequireRole("Customer");
-        });
-    });
-
-builder.Services.AddAuthorization
-(options => 
-options.AddPolicy
-("Director", policy => policy.RequireRole("Director")));
-
-builder.Services.AddAuthorization
-    (options =>
-    options.AddPolicy("Cashier", policy =>
-    policy.RequireRole("Cashier")));
-
-builder.Services.AddAuthorization
-    (options =>
-    options.AddPolicy("MovieManager", policy =>
-    policy.RequireRole("MovieManager")));
-
-builder.Services.AddAuthorization
-    (options =>
-    options.AddPolicy("TheaterManager", policy =>
-    policy.RequireRole("TheaterManager")));
-
-
-builder.Services.AddAuthorization
-    (options =>
-    options.AddPolicy("FacilitiesManager", policy =>
-    policy.RequireRole("FacilitiesManager")));
+builder.Services.AddAuthorization(options =>
+{
+    // Đăng ký các Policy phân quyền dựa trên RoleConstants
+    options.AddPolicy(RoleConstants.Customer, policy => policy.RequireRole(RoleConstants.Customer));
+    options.AddPolicy(RoleConstants.Director, policy => policy.RequireRole(RoleConstants.Director));
+    options.AddPolicy(RoleConstants.Cashier, policy => policy.RequireRole(RoleConstants.Cashier));
+    options.AddPolicy(RoleConstants.MovieManager, policy => policy.RequireRole(RoleConstants.MovieManager));
+    options.AddPolicy(RoleConstants.TheaterManager, policy => policy.RequireRole(RoleConstants.TheaterManager));
+    options.AddPolicy(RoleConstants.FacilitiesManager, policy => policy.RequireRole(RoleConstants.FacilitiesManager));
+});
 
 // Add thêm JWT services
 
@@ -153,6 +129,15 @@ builder.Services.AddScoped<IScheduleServices, ScheduleServices>();
 builder.Services.AddScoped<IStaffService, StaffService>();
 builder.Services.AddScoped<ICloudinaryServices, CloudinaryService>();
 
+// Cấu hình CORS để cho phép Frontend React gọi API mà không bị trình duyệt chặn
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+});
+
 Console.WriteLine(builder.Configuration.GetConnectionString("DefaultConnection"));
 
 var app = builder.Build();
@@ -164,6 +149,9 @@ using (var scoped = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<DataContext>();
         context.Database.Migrate();
+        
+        // Tự động nạp dữ liệu mẫu (Roles, Admin User)
+        backend.Data.DataSeeder.SeedDataAsync(context).Wait();
     }
     catch (Exception ex) 
     {
@@ -180,5 +168,16 @@ app.MapControllers();
 
 app.Run();
 
-
-
+namespace backend
+{
+    public static class RoleConstants
+    {
+        // Danh sách các Role trong hệ thống rạp phim
+        public const string Customer = "Customer";
+        public const string Director = "Director";
+        public const string Cashier = "Cashier";
+        public const string MovieManager = "MovieManager";
+        public const string TheaterManager = "TheaterManager";
+        public const string FacilitiesManager = "FacilitiesManager";
+    }
+}
