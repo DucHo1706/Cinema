@@ -8,7 +8,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
-using backend.Enum; // Cần thiết cho các phương thức LINQ như ToList()
 
 namespace backend.Hosted;
 
@@ -70,11 +69,6 @@ public class HostedService : BackgroundService
                                 _logger.LogInformation($"Đơn hàng {order.OrderId} đã bị hủy do quá hạn thanh toán.");
                             }
                         }
-                        
-                        if (hasOrderChanges)
-                        {
-                            _context.Set<Order>().UpdateRange(pendingOrders);
-                        }
 
                         // 2. Đánh dấu các suất chiếu (Showtime) đã kết thúc
                         // VỚI DB MỚI: KHÔNG CẦN CHẠY VÒNG LẶP RESET isTaken = false cho ghế nữa! 
@@ -90,7 +84,6 @@ public class HostedService : BackgroundService
                                 showtime.IsDeleted = true;
                                 _logger.LogInformation($"Suất chiếu {showtime.ShowtimeId} đã kết thúc.");
                             }
-                            _context.Set<Showtime>().UpdateRange(expiredShowtimes);
                         }
 
                         await _context.SaveChangesAsync(); 

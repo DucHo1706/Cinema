@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from '../config/constants';
 
 // Define API response interfaces
 interface EmailSendResponse {
@@ -36,7 +37,7 @@ const ForgotPassword: React.FC = () => {
         setLoading(true);
         try {
             const response = await fetch(
-                `http://localhost:5229/api/Email/send?email=${encodeURIComponent(email)}`,
+                `${API_BASE_URL}/api/Email/send?email=${encodeURIComponent(email)}`,
                 {
                     method: "POST",
                     headers: { "accept": "*/*" },
@@ -61,7 +62,7 @@ const ForgotPassword: React.FC = () => {
         setLoading(true);
         try {
             const response = await fetch(
-                `http://localhost:5229/api/Auth/VerifyEmailCode?EmailAddress=${encodeURIComponent(email)}&code=${code}`,
+                `${API_BASE_URL}/api/Auth/VerifyEmailCode?EmailAddress=${encodeURIComponent(email)}&code=${code}`,
                 {
                     method: "POST",
                     headers: { "accept": "*/*" },
@@ -91,7 +92,7 @@ const ForgotPassword: React.FC = () => {
             return;
         }
         try {
-            const response = await fetch(`http://localhost:5229/api/Account/ResetPassword`, {
+            const response = await fetch(`${API_BASE_URL}/api/Account/ResetPassword`, {
                 method: "POST",
                 headers: { "accept": "*/*", "Content-Type": "application/json" },
                 body: JSON.stringify({

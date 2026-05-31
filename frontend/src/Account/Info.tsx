@@ -5,6 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
 import BookingHistory from "./BookingHistory";
+import { API_BASE_URL } from '../config/constants';
 
 const Info: React.FC = () => {
     const userEmail = localStorage.getItem("userEmail");
@@ -55,7 +56,7 @@ const Info: React.FC = () => {
             phoneNumber,
         };
 
-        const apiUrl = `http://localhost:5229/api/Account/ChangeAccountInformation?Userid=${localStorage.getItem('IDND')}`;
+        const apiUrl = `${API_BASE_URL}/api/Account/ChangeAccountInformation?Userid=${localStorage.getItem('IDND')}`;
 
         try {
             const response = await fetch(apiUrl, {
@@ -99,7 +100,7 @@ const Info: React.FC = () => {
             confirmPassword,
         };
 
-        const apiUrl = `http://localhost:5229/api/Account/changePassword?userID=${localStorage.getItem('IDND')}`;
+        const apiUrl = `${API_BASE_URL}/api/Account/changePassword?userID=${localStorage.getItem('IDND')}`;
 
         try {
             const response = await fetch(apiUrl, {

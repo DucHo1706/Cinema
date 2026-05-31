@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { API_BASE_URL } from '../config/constants';
 
 interface Cinema {
     cinemaId: string;
@@ -36,7 +37,7 @@ const CinemaManagement: React.FC<CinemaManagementProps> = ({ cinemas, fetchCinem
     const handleSaveCinema = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:5229/api/Cinema/addCinema', {
+            const response = await fetch(`${API_BASE_URL}/api/Cinema/addCinema`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -73,7 +74,7 @@ const CinemaManagement: React.FC<CinemaManagementProps> = ({ cinemas, fetchCinem
 
         setIsLoading(true);
         try {
-            const response = await fetch(`http://localhost:5229/api/Cinema/deleteCinema/${selectedCinemaId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/Cinema/deleteCinema/${selectedCinemaId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

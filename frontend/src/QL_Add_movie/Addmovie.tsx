@@ -4,6 +4,7 @@ import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
 import bg from "../image/bg.png";
 import { Navigate, useNavigate } from "react-router";
+import { API_BASE_URL } from '../config/constants';
 
 // Interfaces (Không thay đổi)
 interface Genre {
@@ -124,7 +125,7 @@ const AddMovie: React.FC = () => {
 
     const fetchMovies = (page: number) => {
         fetchData(
-            `http://localhost:5229/api/movie/getAllMoviesPagniation/${page}`,
+            `${API_BASE_URL}/api/movie/getAllMoviesPagniation/${page}`,
             (data) => {
                 const formattedMovies = (Array.isArray(data.movieRespondDTOs) ? data.movieRespondDTOs : []).map((item: any) => ({
                     movieId: item.movieID || undefined,
@@ -155,7 +156,7 @@ const AddMovie: React.FC = () => {
         }
 
         fetchData(
-            "http://localhost:5229/api/Genre",
+            `${API_BASE_URL}/api/Genre`,
             (data) => {
                 // Hỗ trợ cả object response.data hoặc array trực tiếp
                 const items = data.data || data;
@@ -290,8 +291,8 @@ const AddMovie: React.FC = () => {
 
         try {
             const url = editIndex !== null
-                ? `http://localhost:5229/api/movie/editMovie?movieID=${movies[editIndex].movieId}`
-                : "http://localhost:5229/api/movie/createMovie";
+                ? `${API_BASE_URL}/api/movie/editMovie?movieID=${movies[editIndex].movieId}`
+                : `${API_BASE_URL}/api/movie/createMovie`;
             const method = editIndex !== null ? "patch" : "post";
             const res = await axios.request<CreateMovieResponse>({
                 method,
@@ -360,7 +361,7 @@ const AddMovie: React.FC = () => {
         window.scrollTo(0, 0); // Cuộn lên đầu trang để xem biểu mẫu
 
         try {
-            const res = await fetch(`http://localhost:5229/api/movie/getMovieDetail/${movie.movieId}`, {
+            const res = await fetch(`${API_BASE_URL}/api/movie/getMovieDetail/${movie.movieId}`, {
                 headers: {
                     Authorization: `Bearer ${TOKEN}`,
                 },
@@ -414,7 +415,7 @@ const AddMovie: React.FC = () => {
             const movieId = movies[deleteIndex].movieId;
             if (movieId) {
                 try {
-                    await axios.delete(`http://localhost:5229/api/movie/DeleteMovie/${movieId}`, {
+                    await axios.delete(`${API_BASE_URL}/api/movie/DeleteMovie/${movieId}`, {
                         headers: {
                             Authorization: `Bearer ${TOKEN}`,
                             accept: '*/*'

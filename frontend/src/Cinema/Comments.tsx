@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Nav from '../Header/nav';
 import Bottom from '../Footer/bottom';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config/constants';
 
 // Định nghĩa interface cho bình luận
 interface Comment {
@@ -103,7 +104,7 @@ const Comments: React.FC = () => {
 
                 // Lấy chi tiết phim
                 const movieResponse = await fetch(
-                    `http://localhost:5229/api/movie/getMovieDetail/${movieId}`,
+                    `${API_BASE_URL}/api/movie/getMovieDetail/${movieId}`,
                     {
                         method: 'GET',
                         headers: {
@@ -124,7 +125,7 @@ const Comments: React.FC = () => {
 
                 // Lấy danh sách bình luận
                 const commentsResponse = await fetch(
-                    `http://localhost:5229/api/Comment/getComment/${movieId}`,
+                    `${API_BASE_URL}/api/Comment/getComment/${movieId}`,
                     {
                         method: 'GET',
                         headers: {
@@ -185,7 +186,7 @@ const Comments: React.FC = () => {
 
         try {
             const response = await fetch(
-                `http://localhost:5229/api/Comment/uploadComment/${userId}/${movieId}?commentDetail=${encodeURIComponent(commentToPost)}`,
+                `${API_BASE_URL}/api/Comment/uploadComment/${userId}/${movieId}?commentDetail=${encodeURIComponent(commentToPost)}`,
                 {
                     method: 'POST',
                     headers: {
@@ -251,7 +252,7 @@ const Comments: React.FC = () => {
 
         try {
             const response = await fetch(
-                `http://localhost:5229/api/Comment/editComment/${editingCommentId}?commentDetail=${encodedCommentDetail}`,
+                `${API_BASE_URL}/api/Comment/editComment/${editingCommentId}?commentDetail=${encodedCommentDetail}`,
                 {
                     method: 'PATCH',
                     headers: {
@@ -297,7 +298,7 @@ const Comments: React.FC = () => {
 
         try {
             const response = await fetch(
-                `http://localhost:5229/api/Comment/deleteComment/${commentId}`,
+                `${API_BASE_URL}/api/Comment/deleteComment/${commentId}`,
                 {
                     method: 'DELETE',
                     headers: {

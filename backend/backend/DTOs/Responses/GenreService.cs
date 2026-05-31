@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
 
+
 namespace backend.Services.GenreServices
 {
     public class GenreService : IGenreService
@@ -36,7 +37,11 @@ namespace backend.Services.GenreServices
             var isExist = await _context.Genres.AnyAsync(g => g.Name.ToLower() == request.Name.ToLower());
             if (isExist) return (false, "Tên thể loại đã tồn tại", null);
 
-            var genre = new Genre { Name = request.Name };
+            var genre = new backend.Models.Genre 
+            { 
+                Name = request.Name,
+                Description = request.Description 
+            };
             await _context.Genres.AddAsync(genre);
             await _context.SaveChangesAsync();
 
@@ -52,7 +57,12 @@ namespace backend.Services.GenreServices
             if (isExist) return (false, "Tên thể loại đã tồn tại", null);
 
             genre.Name = request.Name;
-            _context.Genres.Update(genre);
+            
+            if (request.Description != null)
+            {
+                genre.Description = request.Description;
+            }
+            
             await _context.SaveChangesAsync();
 
             return (true, "Cập nhật thể loại thành công", null);

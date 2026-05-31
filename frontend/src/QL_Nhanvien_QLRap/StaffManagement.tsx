@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { API_BASE_URL } from '../config/constants';
 
 interface Cinema {
     cinemaId: string;
@@ -88,7 +89,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ cinemas }) => {
                 return;
             }
             try {
-                const response = await fetch("http://localhost:5229/api/Staff/GetRoleList", {
+                const response = await fetch(`${API_BASE_URL}/api/Staff/GetRoleList`, {
                     method: 'GET',
                     headers: {
                         'accept': '*/*',
@@ -122,7 +123,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ cinemas }) => {
                 navigate('/login');
                 return;
             }
-            const response = await fetch("http://localhost:5229/api/Staff/GetStaffList", {
+            const response = await fetch(`${API_BASE_URL}/api/Staff/GetStaffList`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -173,7 +174,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ cinemas }) => {
             const dateOfBirthISO = addStaffFormData.dateOfBirth ? new Date(addStaffFormData.dateOfBirth).toISOString() : "";
             const authToken = localStorage.getItem('authToken');
             
-            const response = await fetch("http://localhost:5229/api/Staff/AddStaff", {
+            const response = await fetch(`${API_BASE_URL}/api/Staff/AddStaff`, {
                 method: "POST",
                 headers: { "accept": "*/*", "Content-Type": "application/json", 'Authorization': `Bearer ${authToken}` },
                 body: JSON.stringify({
@@ -216,7 +217,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ cinemas }) => {
         setLoading(true);
         try {
             const authToken = localStorage.getItem('authToken');
-            const response = await fetch(`http://localhost:5229/api/Staff/DeleteStaff?id=${staffIdToDelete}`, {
+            const response = await fetch(`${API_BASE_URL}/api/Staff/DeleteStaff?id=${staffIdToDelete}`, {
                 method: "DELETE",
                 headers: { 'accept': "*/*", 'Authorization': `Bearer ${authToken}` },
             });
@@ -264,7 +265,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ cinemas }) => {
                 staffRole: editingStaff.staffRole,
             };
             const authToken = localStorage.getItem('authToken');
-            const response = await fetch(`http://localhost:5229/api/Staff/editStaff?id=${editingStaff.staffId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/Staff/editStaff?id=${editingStaff.staffId}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json", 'Authorization': `Bearer ${authToken}` },
                 body: JSON.stringify(payload),

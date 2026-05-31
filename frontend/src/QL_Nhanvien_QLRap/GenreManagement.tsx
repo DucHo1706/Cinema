@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
+import { API_BASE_URL } from '../config/constants';
 
 interface Genre {
     id: string;
@@ -28,7 +29,7 @@ const GenreManagement: React.FC = () => {
         setError(null);
         try {
             const authToken = localStorage.getItem('authToken');
-            const response = await fetch("http://localhost:5229/api/Genre", {
+            const response = await fetch(`${API_BASE_URL}/api/Genre`, {
                 headers: {
                     'accept': '*/*',
                     'Authorization': `Bearer ${authToken}`
@@ -86,13 +87,13 @@ const GenreManagement: React.FC = () => {
         try {
             const authToken = localStorage.getItem('authToken');
             
-            let url = "http://localhost:5229/api/Genre";
+            let url = `${API_BASE_URL}/api/Genre`;
             let method = "POST";
             let payload: any = { name: genreFormData.name, description: genreFormData.description };
 
             // Tùy chỉnh URL và Method nếu đang ở chế độ Edit
             if (modalMode === 'edit' && editingGenreId) {
-                url = `http://localhost:5229/api/Genre/${editingGenreId}`; 
+                url = `${API_BASE_URL}/api/Genre/${editingGenreId}`; 
                 method = "PUT";
                 payload = { id: editingGenreId, name: genreFormData.name, description: genreFormData.description };
             }
@@ -127,7 +128,7 @@ const GenreManagement: React.FC = () => {
         setIsSubmitting(true);
         try {
             const authToken = localStorage.getItem('authToken');
-            const response = await fetch(`http://localhost:5229/api/Genre/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/Genre/${id}`, {
                 method: "DELETE",
                 headers: {
                     "accept": "*/*",

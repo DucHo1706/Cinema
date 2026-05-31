@@ -1,4 +1,4 @@
-﻿﻿using backend.Data;
+﻿﻿﻿﻿using backend.Data;
 using backend.Interface.Schedule;
 using backend.DTOs.Requests;
 using backend.DTOs.Responses;
@@ -141,7 +141,6 @@ namespace backend.Services.Schedule
                 showtime.BaseTicketPrice = request.BaseTicketPrice.Value;
             }
 
-            _dataContext.Showtimes.Update(showtime);
             await _dataContext.SaveChangesAsync();
 
             return (true, "Chỉnh sửa thành công", null);

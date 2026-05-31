@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import Nav from '../Header/nav';
 import Bottom from '../Footer/bottom';
+import { API_BASE_URL } from '../config/constants';
 
 function Register() {
     const navigate = useNavigate();
@@ -68,7 +68,7 @@ function Register() {
         }
 
         try {
-            const response = await fetch('http://localhost:5229/api/Auth/register', {
+            const response = await fetch(`${API_BASE_URL}/api/Auth/register`, {
                 method: 'POST',
                 headers: {
                     'accept': '*/*',

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { API_BASE_URL } from '../config/constants';
 
 interface Booking {
   bookingId: string;
@@ -40,7 +41,7 @@ const BookingHistory: React.FC = () => {
       }
 
       const authToken = localStorage.getItem('authToken');
-      const url = `http://localhost:5229/api/BookingHistory/getBookingHistory/${finalUserId}`;
+      const url = `${API_BASE_URL}/api/BookingHistory/getBookingHistory/${finalUserId}`;
       try {
         const response = await fetch(url, {
           method: 'GET',
@@ -89,7 +90,7 @@ const BookingHistory: React.FC = () => {
     setModalLoading(true);
     setModalError(null);
     const authToken = localStorage.getItem('authToken');
-    const url = `http://localhost:5229/api/BookingHistory/getBookingHistoryDetail/${bookingId}`;
+    const url = `${API_BASE_URL}/api/BookingHistory/getBookingHistoryDetail/${bookingId}`;
 
     try {
       const response = await fetch(url, {

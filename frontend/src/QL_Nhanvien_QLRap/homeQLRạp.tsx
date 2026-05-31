@@ -11,6 +11,7 @@ import StaffManagement from "./StaffManagement";
 import CinemaManagement from "./CinemaManagement";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { API_BASE_URL } from '../config/constants';
 
 interface FoodItem {
     foodId: string;
@@ -69,7 +70,7 @@ const Info: React.FC = () => {
 
     // Fetch food items and open modal on mount
     useEffect(() => {
-        axios.get('http://localhost:5229/api/Food/GetFoodInformation')
+        axios.get(`${API_BASE_URL}/api/Food/GetFoodInformation`)
             .then(response => {
                 // Log the full response for debugging
                 console.log('Full API Response:', response);
@@ -126,7 +127,7 @@ const Info: React.FC = () => {
         try {
             const userId = localStorage.getItem('IDND');
             await axios.post(
-                `http://localhost:5229/api/StaffOrder/StaffOrder?UserId=${userId}`,
+                `${API_BASE_URL}/api/StaffOrder/StaffOrder?UserId=${userId}`,
                 orderData,
                 {
                     headers: {
@@ -166,7 +167,7 @@ const Info: React.FC = () => {
             confirmPassword: confirmPassword,
         };
 
-        const apiUrl = `http://localhost:5229/api/Account/changePassword?userID=${localStorage.getItem('IDND')}`;
+        const apiUrl = `${API_BASE_URL}/api/Account/changePassword?userID=${localStorage.getItem('IDND')}`;
         console.log('id là', localStorage.getItem('IDND'));
         try {
             const response = await fetch(apiUrl, {
@@ -212,7 +213,7 @@ const Info: React.FC = () => {
     const isDirector = roles1.includes('Director');
     const fetchCinemas = useCallback(async () => {
         try {
-            const response = await fetch("http://localhost:5229/api/Cinema/getCinemaList");
+            const response = await fetch(`${API_BASE_URL}/api/Cinema/getCinemaList`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
             if (data.status === "Success" && data.data) {
