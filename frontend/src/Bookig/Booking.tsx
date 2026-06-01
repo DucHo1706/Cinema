@@ -78,106 +78,102 @@ function Booking() {
   };
 
   return (
-    <div
-      className="App bg-fixed w-full min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')" }}
-    >
-      <div className="sticky top-0 z-50 bg-slate-900 shadow-md">
-        <header>
-          <div className="max-w-screen-xl mx-auto px-8">
-            <Nav />
-          </div>
-        </header>
+    <div className="relative min-h-screen w-full bg-slate-950 font-sans selection:bg-purple-500/30">
+      <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-[url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')] bg-cover bg-center opacity-20"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-slate-950/80 to-slate-950"></div>
       </div>
-      <div>
-        <main className="max-w-screen-xl mx-auto px-8 py-12">
-          <h2 className="text-3xl text-white font-bold mb-8 uppercase text-center">-- Phim đang chiếu --</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-[200px]">
+
+      <div className="relative z-10 flex flex-col min-h-screen">
+        <div className="sticky top-0 z-50 bg-slate-950 shadow-md border-b border-slate-800/50">
+          <header>
+            <div className="max-w-screen-xl mx-auto px-4 sm:px-8">
+              <Nav />
+            </div>
+          </header>
+        </div>
+
+        <main className="flex-grow max-w-screen-xl w-full mx-auto px-4 sm:px-8 py-12">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 font-extrabold uppercase tracking-wider relative inline-block mx-auto">
+              Phim Đang Chiếu
+              <span className="absolute -bottom-2 left-1/4 w-1/2 h-1 bg-gradient-to-r from-purple-400 to-transparent rounded-full"></span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-[250px]">
             {movies.length > 0 ? (
               movies.map((movie, index) => (
                 <div
                   key={movie.movieID}
-                  className={`relative bg-slate-800/80 rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-all duration-300 border border-slate-700 ${getCardSize(index)}`}
+                  className={`relative group bg-slate-900/80 rounded-2xl shadow-xl overflow-hidden transition-all duration-500 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] border border-slate-800 cursor-pointer ${getCardSize(index)}`}
+                  onClick={() => handleShowtimes(movie.movieID)}
                 >
                   <img
                     src={movie.movieImage}
                     alt={movie.movieName}
-                    className="w-full h-full object-cover cursor-pointer"
-                    onClick={() => handleOpenTrailer(movie.movieTrailerUrl)}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-black/50 flex flex-col justify-end p-4">
-                    <h3 className="text-white text-lg font-semibold line-clamp-2 mb-2">
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent flex flex-col justify-end p-5">
+                    <h3 className="text-slate-100 text-xl font-bold line-clamp-2 mb-4 group-hover:text-purple-400 transition-colors duration-300 drop-shadow-md">
                       {movie.movieName}
                     </h3>
-                    <div className="flex gap-3 justify-center items-center">
+                    <div className="translate-y-8 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
                       <button
-                        onClick={() => handleOpenTrailer(movie.movieTrailerUrl)}
-                        className="w-10 h-10 p-2 flex items-center justify-center rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
-                        <div className="relative z-10">
-                          <svg
-                            className="w-5 h-5 fill-current text-red-500 group-hover:text-red-400 transition-colors duration-300"
-                            viewBox="0 0 576 512"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z"
-                            ></path>
-                          </svg>
-                        </div>
-                      </button>
-                      <button
-                        onClick={() => handleShowtimes(movie.movieID)}
-                        className="relative w-[120px] h-10 bg-purple-600 text-white border-none rounded-md text-sm font-bold cursor-pointer z-10 group overflow-hidden flex items-center justify-center"
+                        onClick={(e) => { e.stopPropagation(); handleShowtimes(movie.movieID); }}
+                        className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold tracking-wide shadow-lg transition-all"
                       >
                         🎟 Đặt vé ngay
-                        <span className="absolute w-48 h-32 -top-10 -left-8 bg-white rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-500 duration-1000 origin-left"></span>
-                        <span className="absolute w-48 h-32 -top-10 -left-8 bg-orange-400 rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-700 duration-700 origin-left"></span>
-                        <span className="absolute w-48 h-32 -top-10 -left-8 bg-orange-600 rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-1000 duration-500 origin-left"></span>
-                        <span className="flex flex-row items-center justify-center group-hover:opacity-100 group-hover:duration-1000 duration-100 opacity-0 absolute z-10 inset-0">
-                          🎟 Đặt vé ngay
-                        </span>
                       </button>
                     </div>
+                  </div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500 scale-50 group-hover:scale-100 z-10">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleOpenTrailer(movie.movieTrailerUrl); }}
+                      className="p-4 bg-red-600/90 rounded-full text-white hover:bg-red-500 shadow-[0_0_20px_rgba(220,38,38,0.6)] transition-all transform hover:scale-110"
+                    >
+                      <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 576 512">
+                        <path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-white text-center col-span-4">Không có phim nào để hiển thị.</p>
+              <p className="text-slate-400 text-center col-span-4 text-lg">Không có phim nào để hiển thị.</p>
             )}
           </div>
         </main>
         {/* Trailer Popup */}
         {showTrailer && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-            <div className="bg-black rounded-lg p-4 relative w-[90%] md:w-[60%] aspect-video">
+          <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300 p-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-2 sm:p-4 relative w-full max-w-5xl aspect-video shadow-2xl">
               <button
                 onClick={() => setShowTrailer(false)}
-                className="absolute top-2 right-2 text-white text-2xl font-bold"
+                className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6 w-10 h-10 sm:w-12 sm:h-12 bg-slate-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xl shadow-lg transition-colors duration-300 z-10"
               >
                 ✕
               </button>
               <iframe
                 src={trailerUrl}
                 title="Trailer"
-                className="w-full h-full rounded-md"
+                className="w-full h-full rounded-xl"
                 allowFullScreen
               />
             </div>
           </div>
         )}
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointer"
+        >
+          ↑
+        </button>
+        <footer>
+          <Bottom />
+        </footer>
       </div>
-      <button
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointer"
-      >
-        ↑
-      </button>
-      <footer className="pt-32">
-        <Bottom />
-      </footer>
     </div>
   );
 }

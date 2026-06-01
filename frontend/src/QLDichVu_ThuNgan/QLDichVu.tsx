@@ -288,20 +288,33 @@ const CinemaPage: React.FC = () => {
   };
 
   const handleSaveCinema = async () => {
+    const rawToken = localStorage.getItem('authToken');
+    if (!rawToken) {
+      alert('Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.');
+      return;
+    }
+    
+    // Loại bỏ dấu ngoặc kép thừa nếu có
+    const authToken = rawToken.replace(/^"|"$/g, '');
+
     try {
       const response = await fetch(
         'http://localhost:5229/api/Cinema/addCinema',
         {
           method: 'POST',
           headers: {
+            'accept': '*/*',
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            'Authorization': `Bearer ${authToken}`,
           },
           body: JSON.stringify(newCinema),
         },
       );
       const responseData = await response.json();
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Phiên đăng nhập hết hạn hoặc bạn không có quyền thực hiện chức năng này.');
+        }
         throw new Error(responseData.message || 'Failed to add cinema');
       }
       setIsAddModalOpen(false);

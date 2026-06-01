@@ -162,17 +162,17 @@ const ForgotPassword: React.FC = () => {
                                         value={code}
                                         onChange={(e) => setCode(e.target.value)}
                                         placeholder=""
-                                        className="peer w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 rounded-md text-lg transition-all duration-200"
+                                        className="peer w-full px-4 py-3 border border-slate-700 bg-slate-950/50 text-white placeholder-transparent focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 rounded-xl transition-all duration-300 tracking-widest text-center"
                                         required
                                     />
-                                    <label className="absolute left-4 -top-2 text-gray-400 text-base transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-placeholder-shown:top-3 peer-focus:-top-2 peer-focus:text-purple-300">
+                                    <label className="absolute left-4 -top-2.5 bg-slate-900 px-1 text-slate-400 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3.5 peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-purple-400">
                                         Bạn hãy nhập mã xác nhận
                                     </label>
                                 </div>
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full mt-6 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full mt-8 px-6 py-3.5 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg hover:shadow-sky-500/30 transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
                                 >
                                     {loading ? "Đang xác nhận..." : "Xác nhận mã"}
                                 </button>
@@ -186,10 +186,10 @@ const ForgotPassword: React.FC = () => {
                                         value={newPassword}
                                         onChange={(e) => setNewPassword(e.target.value)}
                                         placeholder=""
-                                        className="peer w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 rounded-md text-lg transition-all duration-200"
+                                        className="peer w-full px-4 py-3 border border-slate-700 bg-slate-950/50 text-white placeholder-transparent focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 rounded-xl transition-all duration-300"
                                         required
                                     />
-                                    <label className="absolute left-4 -top-2 text-gray-400 text-base transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-placeholder-shown:top-3 peer-focus:-top-2 peer-focus:text-purple-300">
+                                    <label className="absolute left-4 -top-2.5 bg-slate-900 px-1 text-slate-400 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3.5 peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-purple-400">
                                         Bạn hãy nhập mật khẩu mới
                                     </label>
                                 </div>
@@ -199,17 +199,17 @@ const ForgotPassword: React.FC = () => {
                                         value={reNewPassword}
                                         onChange={(e) => setReNewPassword(e.target.value)}
                                         placeholder=""
-                                        className="peer w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 rounded-md text-lg transition-all duration-200"
+                                        className="peer w-full px-4 py-3 border border-slate-700 bg-slate-950/50 text-white placeholder-transparent focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 rounded-xl transition-all duration-300"
                                         required
                                     />
-                                    <label className="absolute left-4 -top-2 text-gray-400 text-base transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-placeholder-shown:top-3 peer-focus:-top-2 peer-focus:text-purple-300">
+                                    <label className="absolute left-4 -top-2.5 bg-slate-900 px-1 text-slate-400 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3.5 peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-purple-400">
                                         Xác nhận mật khẩu mới !
                                     </label>
                                 </div>
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full mt-6 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full mt-8 px-6 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-lg hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
                                 >
                                     {loading ? "Đang đặt lại..." : "Đặt lại mật khẩu"}
                                 </button>

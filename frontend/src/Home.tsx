@@ -1,10 +1,13 @@
+// @ts-ignore: missing type declarations for css import
 import './App.css';
 import Nav from './Header/nav';
 import Bottom from './Footer/bottom';
 import MovieSlider from './Components/MovieSlider';
 import React, { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
+// @ts-ignore: missing type declarations for swiper css
 import 'swiper/css';
+// @ts-ignore: missing type declarations for swiper navigation css
 import 'swiper/css/navigation';
 import { Navigation } from 'swiper/modules';
 import { useNavigate } from 'react-router-dom';
@@ -126,97 +129,92 @@ function Home() {
     setShowTrailer(true);
   };
 
-  const renderMovieSlide = (movie: Movie, index: number) => (
-    <SwiperSlide key={movie.movieId}>
-      <div className="flex flex-col items-center">
-        <img
-          src={movie.movieImage}
-          alt={movie.movieName}
-          onClick={() => handleOpenTrailer(movie.trailerUrl)}
-          className="w-80 h-[400px] object-cover rounded shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer"
-        />
-        <p className="text-white mt-4 font-semibold text-center max-w-[280px] truncate">{movie.movieName}</p>
-        <div className="mt-2 flex gap-2">
-          <button
-            onClick={() => handleOpenTrailer(movie.trailerUrl)}
-            className="p-3 rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
-            <div className="relative z-10">
-              <svg
-                className="w-7 h-7 fill-current text-red-500 group-hover:text-red-400 transition-colors duration-300"
-                viewBox="0 0 576 512"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z"></path>
-              </svg>
-            </div>
-          </button>
-          <button
+  const renderMovieSlide = (movie: Movie, index: number): React.ReactElement => (
+    <SwiperSlide key={movie.movieId} className="py-4">
+      <div className="flex flex-col items-center group cursor-pointer">
+        <div className="relative overflow-hidden rounded-2xl shadow-xl transition-all duration-500 group-hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] w-72 h-[420px]">
+          <img
+            src={movie.movieImage}
+            alt={movie.movieName}
             onClick={() => handleMovies(movie.movieId)}
-            className="overflow-hidden relative w-50 p-2 h-12 bg-purple-600 text-white border-none rounded-md text-base font-bold cursor-pointer z-10 group"
-          >
-            🎟 Đặt vé ngay
-            <span className="absolute w-60 h-40 -top-12 -left-10 bg-white rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-500 duration-1000 origin-left"></span>
-            <span className="absolute w-60 h-40 -top-12 -left-10 bg-orange-400 rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-700 duration-700 origin-left"></span>
-            <span className="absolute w-60 h-40 -top-12 -left-10 bg-orange-600 rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-1000 duration-500 origin-left"></span>
-            <span className="flex flex-row items-center justify-center group-hover:opacity-100 group-hover:duration-1000 duration-100 opacity-0 absolute z-10 inset-0">
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-5">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleMovies(movie.movieId); }}
+              className="w-full py-3 mb-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold tracking-wide transform translate-y-8 group-hover:translate-y-0 transition-all duration-300 shadow-lg"
+            >
               🎟 Đặt vé ngay
-            </span>
-          </button>
+            </button>
+          </div>
+          {/* Play button overlay */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500 scale-50 group-hover:scale-100 z-10">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleOpenTrailer(movie.trailerUrl); }}
+              className="p-4 bg-red-600/90 rounded-full text-white hover:bg-red-500 shadow-[0_0_20px_rgba(220,38,38,0.6)] transition-all transform hover:scale-110"
+            >
+              <svg
+                className="w-8 h-8 ml-1"
+                fill="currentColor"
+                viewBox="0 0 576 512"
+              >
+                <path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z" />
+              </svg>
+            </button>
+          </div>
         </div>
+        <p className="text-slate-100 mt-5 font-bold text-lg text-center max-w-[280px] truncate tracking-wide group-hover:text-purple-400 transition-colors duration-300">{movie.movieName}</p>
       </div>
     </SwiperSlide>
   );
 
   const renderMovieSlide1 = (movie: Movie, index: number) => (
-    <SwiperSlide key={movie.movieId}>
-      <div className="flex flex-col items-center">
-        <img
-          src={movie.movieImage}
-          alt={movie.movieName}
-          onClick={() => handleOpenTrailer(movie.trailerUrl)}
-          className="w-80 h-[400px] object-cover rounded shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer"
-        />
-        <p className="text-white mt-4 font-semibold text-center">{movie.movieName}</p>
-        <div className="mt-2 flex gap-2">
-          <button
-            onClick={() => handleOpenTrailer(movie.trailerUrl)}
-            className="p-3 rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
-            <div className="relative z-10">
-              <svg
-                className="w-7 h-7 fill-current text-red-500 group-hover:text-red-400 transition-colors duration-300"
-                viewBox="0 0 576 512"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z"></path>
-              </svg>
-            </div>
-          </button>
-          <button
+    <SwiperSlide key={movie.movieId} className="py-4">
+      <div className="flex flex-col items-center group cursor-pointer">
+        <div className="relative overflow-hidden rounded-2xl shadow-xl transition-all duration-500 group-hover:shadow-[0_0_30px_rgba(56,189,248,0.4)] w-72 h-[420px]">
+          <img
+            src={movie.movieImage}
+            alt={movie.movieName}
             onClick={() => handleMoviedetail(movie.movieId)}
-            className="overflow-hidden relative w-50 p-2 h-12 bg-purple-600 text-white border-none rounded-md text-base font-bold cursor-pointer z-10 group"
-          >
-            🎟 Tìm hiểu thêm
-            <span className="absolute w-60 h-40 -top-12 -left-10 bg-white rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-500 duration-1000 origin-left"></span>
-            <span className="absolute w-60 h-40 -top-12 -left-10 bg-orange-400 rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-700 duration-700 origin-left"></span>
-            <span className="absolute w-60 h-40 -top-12 -left-10 bg-orange-600 rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-1000 duration-500 origin-left"></span>
-            <span className="flex flex-row items-center justify-center group-hover:opacity-100 group-hover:duration-1000 duration-100 opacity-0 absolute z-10 inset-0">
-              🎟 Tìm hiểu thêm
-            </span>
-          </button>
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-5">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleMoviedetail(movie.movieId); }}
+              className="w-full py-3 mb-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white rounded-xl font-bold tracking-wide transform translate-y-8 group-hover:translate-y-0 transition-all duration-300 shadow-lg"
+            >
+              ℹ️ Tìm hiểu thêm
+            </button>
+          </div>
+          {/* Play button overlay */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500 scale-50 group-hover:scale-100 z-10">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleOpenTrailer(movie.trailerUrl); }}
+              className="p-4 bg-red-600/90 rounded-full text-white hover:bg-red-500 shadow-[0_0_20px_rgba(220,38,38,0.6)] transition-all transform hover:scale-110"
+            >
+              <svg
+                className="w-8 h-8 ml-1"
+                fill="currentColor"
+                viewBox="0 0 576 512"
+              >
+                <path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z" />
+              </svg>
+            </button>
+          </div>
         </div>
+        <p className="text-slate-100 mt-5 font-bold text-lg text-center max-w-[280px] truncate tracking-wide group-hover:text-sky-400 transition-colors duration-300">{movie.movieName}</p>
       </div>
     </SwiperSlide>
   );
 
   return (
-    <div
-      className="relative min-h-screen w-full bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: "url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')" }}
-    >
+    <div className="relative min-h-screen w-full bg-slate-950 font-sans selection:bg-purple-500/30">
+      {/* Background Image with Overlay */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-[url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')] bg-cover bg-center opacity-20"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-slate-950/80 to-slate-950"></div>
+      </div>
+
       <div className="relative z-10">
         <div className="sticky top-0 z-50 bg-slate-950 shadow-md">
           <header>
@@ -229,8 +227,17 @@ function Home() {
         <div className="content-wrapper max-w-screen-xl text-base mx-auto px-8 min-h-screen top-0">
           <main className="flex flex-col gap-6 p-4">
             <MovieSlider />
-            <section>
-              <h2 className="text-3xl text-white font-bold pt-10 mb-5 uppercase text-center">-- Phim đang chiếu --</h2>
+            <section className="mt-12">
+              <div className="flex items-center justify-between mb-8 px-4 sm:px-6 lg:px-8">
+                <h2 className="text-3xl md:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 font-extrabold uppercase tracking-wider relative inline-block">
+                  Phim Đang Chiếu
+                  <span className="absolute -bottom-2 left-0 w-1/2 h-1 bg-gradient-to-r from-purple-400 to-transparent rounded-full"></span>
+                </h2>
+                <button onClick={handleListfilm} className="text-slate-400 hover:text-white font-medium flex items-center gap-2 group transition-colors duration-300">
+                  <span className="hidden sm:inline">Xem tất cả</span>
+                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                </button>
+              </div>
               <div className="px-4 sm:px-6 lg:px-8">
                 {isLoading ? (
                   <p className="text-white text-center">Đang tải...</p>
@@ -255,27 +262,18 @@ function Home() {
                 )}
               </div>
             </section>
-            <div className="pt-12">
-              <button
-                onClick={handleListfilm}
-                type="submit"
-                className="flex justify-center gap-2 items-center mx-auto shadow-xl text-base bg-purple-600 backdrop-blur-md lg:font-semibold isolation-auto border-gray-50 before:absolute before:w-full before:transition-all before:duration-700 before:hover:w-full before:-left-full before:hover:left-0 before:rounded-full before:bg-orange-500 hover:text-gray-50 before:-z-10 before:aspect-square before:hover:scale-150 before:hover:duration-700 relative z-10 px-4 py-2 overflow-hidden border-2 rounded-full group text-white"
-              >
-                Xem thêm
-                <svg
-                  className="w-6 h-6 justify-end group-hover:rotate-90 group-hover:bg-gray-50 text-gray-50 ease-linear duration-300 rounded-full border border-gray-700 group-hover:border-none p-2 rotate-45"
-                  viewBox="0 0 16 19"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M7 18C7 18.5523 7.44772 19 8 19C8.55228 19 9 18.5523 9 18H7ZM8.70711 0.292893C8.31658 -0.0976311 7.68342 -0.0976311 7.29289 0.292893L0.928932 6.65685C0.538408 7.04738 0.538408 7.68054 0.928932 8.07107C1.31946 8.46159 1.95262 8.46159 2.34315 8.07107L8 2.41421L13.6569 8.07107C14.0474 8.46159 14.6805 8.46159 15.0711 8.07107C15.4616 7.68054 15.4616 7.04738 15.0711 6.65685L8.70711 0.292893ZM9 18L9 1H7L7 18H9Z"
-                    className="fill-gray-800 group-hover:fill-gray-800"
-                  ></path>
-                </svg>
-              </button>
-            </div>
-            <section>
-              <h2 className="text-3xl text-white font-bold pt-10 mb-5 uppercase text-center">-- Phim sắp chiếu --</h2>
+
+            <section className="mt-16">
+              <div className="flex items-center justify-between mb-8 px-4 sm:px-6 lg:px-8">
+                <h2 className="text-3xl md:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-600 font-extrabold uppercase tracking-wider relative inline-block">
+                  Phim Sắp Chiếu
+                  <span className="absolute -bottom-2 left-0 w-1/2 h-1 bg-gradient-to-r from-sky-400 to-transparent rounded-full"></span>
+                </h2>
+                <button onClick={handleComingmovies} className="text-slate-400 hover:text-white font-medium flex items-center gap-2 group transition-colors duration-300">
+                  <span className="hidden sm:inline">Xem tất cả</span>
+                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                </button>
+              </div>
               <div className="px-4 sm:px-6 lg:px-8">
                 {isLoading ? (
                   <p className="text-white text-center">Đang tải...</p>
@@ -300,35 +298,17 @@ function Home() {
                 )}
               </div>
             </section>
-            <div className="pt-12">
-              <button
-                onClick={handleComingmovies}
-                type="submit"
-                className="flex justify-center gap-2 items-center mx-auto shadow-xl text-base bg-purple-600 backdrop-blur-md lg:font-semibold isolation-auto border-gray-50 before:absolute before:w-full before:transition-all before:duration-700 before:hover:w-full before:-left-full before:hover:left-0 before:rounded-full before:bg-orange-500 hover:text-gray-50 before:-z-10 before:aspect-square before:hover:scale-150 before:hover:duration-700 relative z-10 px-4 py-2 overflow-hidden border-2 rounded-full group"
-              >
-                Xem thêm
-                <svg
-                  className="w-6 h-6 justify-end group-hover:rotate-90 group-hover:bg-gray-50 text-gray-50 ease-linear duration-300 rounded-full border border-gray-700 group-hover:border-none p-2 rotate-45"
-                  viewBox="0 0 16 19"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M7 18C7 18.5523 7.44772 19 8 19C8.55228 19 9 18.5523 9 18H7ZM8.70711 0.292893C8.31658 -0.0976311 7.68342 -0.0976311 7.29289 0.292893L0.928932 6.65685C0.538408 7.04738 0.538408 7.68054 0.928932 8.07107C1.31946 8.46159 1.95262 8.46159 2.34315 8.07107L8 2.41421L13.6569 8.07107C14.0474 8.46159 14.6805 8.46159 15.0711 8.07107C15.4616 7.68054 15.4616 7.04738 15.0711 6.65685L8.70711 0.292893ZM9 18L9 1H7L7 18H9Z"
-                    className="fill-gray-800 group-hover:fill-gray-800"
-                  ></path>
-                </svg>
-              </button>
-            </div>
+
             {showTrailer && (
-              <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-                <div className="bg-black rounded-lg p-4 relative w-[90%] md:w-[60%] aspect-video">
+              <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300 p-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-2 sm:p-4 relative w-full max-w-5xl aspect-video shadow-2xl">
                   <button
                     onClick={() => setShowTrailer(false)}
-                    className="absolute top-2 right-2 text-white text-2xl font-bold"
+                    className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6 w-10 h-10 sm:w-12 sm:h-12 bg-slate-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xl shadow-lg transition-colors duration-300 z-10"
                   >
                     ✕
                   </button>
-                  <iframe src={trailerUrl} title="Trailer" className="w-full h-full rounded-md" allowFullScreen />
+                  <iframe src={trailerUrl} title="Trailer" className="w-full h-full rounded-xl" allowFullScreen />
                 </div>
               </div>
             )}

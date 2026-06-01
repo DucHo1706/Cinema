@@ -356,11 +356,13 @@ const Comments: React.FC = () => {
     const sortedComments = [...userComments, ...otherComments];
 
     return (
-        <div
-            className="flex flex-col min-h-screen bg-fixed w-full bg-cover bg-center"
-            style={{ backgroundImage: "url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')" }}
-        >
-            <div className="sticky top-0 z-50 bg-slate-950 shadow-md">
+        <div className="relative min-h-screen w-full font-sans selection:bg-purple-500/30 text-slate-200">
+            <div className="fixed inset-0 z-0">
+                <div className="absolute inset-0 bg-[url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')] bg-cover bg-center opacity-20"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-slate-950/80 to-slate-950"></div>
+            </div>
+            <div className="relative z-10 flex flex-col min-h-screen">
+            <div className="sticky top-0 z-50 bg-slate-950 shadow-md border-b border-slate-800/50">
                 <div className="max-w-screen-xl mx-auto px-4 sm:px-8">
                     <Nav />
                 </div>
@@ -368,7 +370,7 @@ const Comments: React.FC = () => {
             <main className="flex-grow flex flex-col items-center">
                 <div className="pt-3 w-full max-w-screen-xl mx-auto px-4 sm:px-8 py-12">
                     {movie && (
-                        <div className="p-4 text-white">
+                        <div className="p-6 md:p-8 text-white bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl shadow-2xl mb-12">
                             <div className="flex flex-col md:flex-row gap-6 mb-6 justify-center items-start">
                                 <div className="flex-shrink-0">
                                     <img
@@ -378,38 +380,38 @@ const Comments: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <h2 className="text-3xl font-bold text-yellow-400 mb-4 uppercase">{movie.movieName}</h2>
-                                    <ul className="text-white mb-4 space-y-2">
-                                        <li>
-                                            <span className="text-yellow-400 font-bold">Thể loại:</span>{' '}
-                                            <span className="pl-6">{movie.movieGenre.map(genre => genre.movieGenreName).join(', ')}</span>
+                                    <h2 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400 mb-6 uppercase tracking-wider">{movie.movieName}</h2>
+                                    <ul className="text-slate-300 mb-6 space-y-3">
+                                        <li className="flex items-start">
+                                            <span className="text-purple-400 font-bold w-32 shrink-0">Thể loại:</span>{' '}
+                                            <span>{movie.movieGenre.map(genre => genre.movieGenreName).join(', ')}</span>
                                         </li>
-                                        <li>
-                                            <span className="text-yellow-400 font-bold">Thời lượng:</span>{' '}
-                                            <span className="pl-6">{movie.movieDuration} phút</span>
+                                        <li className="flex items-start">
+                                            <span className="text-purple-400 font-bold w-32 shrink-0">Thời lượng:</span>{' '}
+                                            <span>{movie.movieDuration} phút</span>
                                         </li>
-                                        <li>
-                                            <span className="text-yellow-400 font-bold">Ngôn ngữ:</span>{' '}
-                                            <span className="pl-6">{Object.values(movie.movieLanguage)[0]}</span>
+                                        <li className="flex items-start">
+                                            <span className="text-purple-400 font-bold w-32 shrink-0">Ngôn ngữ:</span>{' '}
+                                            <span>{Object.values(movie.movieLanguage)[0]}</span>
                                         </li>
-                                        <li>
-                                            <span className="text-yellow-400 font-bold">Độ tuổi:</span>{' '}
-                                            <span className="pl-6">{Object.values(movie.movieMinimumAge)[0]}</span>
+                                        <li className="flex items-start">
+                                            <span className="text-purple-400 font-bold w-32 shrink-0">Độ tuổi:</span>{' '}
+                                            <span>{Object.values(movie.movieMinimumAge)[0]}</span>
                                         </li>
-                                        <li>
-                                            <span className="text-yellow-400 font-bold">Đạo diễn:</span>{' '}
-                                            <span className="pl-6">{movie.movieDirector || 'Không có thông tin'}</span>
+                                        <li className="flex items-start">
+                                            <span className="text-purple-400 font-bold w-32 shrink-0">Đạo diễn:</span>{' '}
+                                            <span>{movie.movieDirector || 'Không có thông tin'}</span>
                                         </li>
-                                        <li>
-                                            <span className="text-yellow-400 font-bold">Diễn viên:</span>{' '}
-                                            <span className="pl-6">{movie.movieActor || 'Không có thông tin'}</span>
+                                        <li className="flex items-start">
+                                            <span className="text-purple-400 font-bold w-32 shrink-0">Diễn viên:</span>{' '}
+                                            <span>{movie.movieActor || 'Không có thông tin'}</span>
                                         </li>
-                                        <li>
-                                            <span className="text-yellow-400 font-bold">Khởi chiếu:</span>{' '}
-                                            <span className="pl-6">{new Date(movie.releaseDate).toLocaleDateString('vi-VN')}</span>
+                                        <li className="flex items-start">
+                                            <span className="text-purple-400 font-bold w-32 shrink-0">Khởi chiếu:</span>{' '}
+                                            <span>{new Date(movie.releaseDate).toLocaleDateString('vi-VN')}</span>
                                         </li>
                                     </ul>
-                                    <p className="max-w-[600px] mb-6 text-white">{movie.movieDescription}</p>
+                                    <p className="max-w-[600px] mb-8 text-slate-400 italic text-justify">"{movie.movieDescription}"</p>
                                     <div>
                                         <button
                                             onClick={() => handleOpenTrailer(movie.movieTrailerUrl)}
@@ -434,7 +436,7 @@ const Comments: React.FC = () => {
                         </div>
                     )}
                     <div className='flex justify-center items-center flex-col'>
-                        <h1 className="text-3xl font-bold text-yellow-400 mb-6 uppercase">Bình luận</h1>
+                        <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-500 mb-8 uppercase tracking-widest relative inline-block">Bình luận<span className="absolute -bottom-2 left-0 w-1/2 h-1 bg-gradient-to-r from-sky-400 to-transparent rounded-full"></span></h1>
                         {loading && (
                             <div className="flex-col gap-4 w-full flex items-center justify-center">
                                 <div className="w-20 h-20 border-4 border-transparent text-blue-400 text-4xl animate-spin flex items-center justify-center border-t-blue-400 rounded-full">
@@ -449,23 +451,23 @@ const Comments: React.FC = () => {
 
                         {/* Form gửi bình luận */}
                         {!isEditing && (
-                            <div className="mb-8 w-full max-w-screen-lg">
-                                <form onSubmit={handleSubmitComment} className="bg-white/10 p-6 rounded-md shadow-lg">
-                                    <h3 className="text-xl font-semibold text-white mb-4">Thêm bình luận</h3>
+                            <div className="mb-10 w-full max-w-screen-lg">
+                                <form onSubmit={handleSubmitComment} className="bg-slate-900/60 border border-slate-800 backdrop-blur-md p-6 rounded-2xl shadow-xl">
+                                    <h3 className="text-xl font-bold text-slate-200 mb-4">Thêm bình luận của bạn</h3>
                                     <textarea
                                         value={newComment}
                                         onChange={(e) => setNewComment(e.target.value)}
                                         placeholder="Viết bình luận của bạn..."
-                                        className="w-full p-3 rounded-md bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-yellow-400"
+                                        className="w-full p-4 rounded-xl bg-slate-950/50 text-slate-200 border border-slate-700 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all duration-300 resize-none"
                                         rows={4}
                                         disabled={posting}
                                     />
                                     <button
                                         type="submit"
                                         disabled={posting || !newComment.trim()}
-                                        className={`mt-4 px-6 py-2 rounded-md font-semibold text-white transition-colors duration-200 ${posting || !newComment.trim()
-                                            ? 'bg-gray-600 cursor-not-allowed'
-                                            : 'bg-green-600 hover:bg-green-700'
+                                        className={`mt-4 px-6 py-2.5 rounded-xl font-bold text-white transition-all duration-300 shadow-lg flex ml-auto ${posting || !newComment.trim()
+                                            ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                                            : 'bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 hover:-translate-y-0.5 hover:shadow-sky-500/30'
                                             }`}
                                     >
                                         {posting ? 'Đang gửi...' : 'Gửi bình luận'}
@@ -476,35 +478,35 @@ const Comments: React.FC = () => {
                         
                         {/* Form chỉnh sửa bình luận */}
                         {isEditing && (
-                            <div className="mb-8 w-full max-w-screen-lg">
-                                <div className="bg-white/10 p-6 rounded-md shadow-lg">
-                                    <h3 className="text-xl font-semibold text-white mb-4">Chỉnh sửa bình luận</h3>
+                            <div className="mb-10 w-full max-w-screen-lg">
+                                <div className="bg-slate-900/60 border border-slate-800 backdrop-blur-md p-6 rounded-2xl shadow-xl">
+                                    <h3 className="text-xl font-bold text-slate-200 mb-4">Chỉnh sửa bình luận</h3>
                                     <textarea
                                         value={editingCommentDetail}
                                         onChange={(e) => setEditingCommentDetail(e.target.value)}
-                                        className="w-full p-3 rounded-md bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-yellow-400"
+                                        className="w-full p-4 rounded-xl bg-slate-950/50 text-slate-200 border border-slate-700 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all duration-300 resize-none"
                                         rows={4}
                                     />
-                                    <div className="mt-4 flex space-x-2">
-                                        <button
-                                            onClick={handleSaveEdit}
-                                            disabled={posting || !editingCommentDetail.trim()}
-                                            className={`px-6 py-2 rounded-md font-semibold text-white transition-colors duration-200 ${posting || !editingCommentDetail.trim()
-                                                ? 'bg-gray-600 cursor-not-allowed'
-                                                : 'bg-blue-600 hover:bg-blue-700'
-                                                }`}
-                                        >
-                                            {posting ? 'Đang lưu...' : 'Lưu'}
-                                        </button>
+                                    <div className="mt-4 flex justify-end space-x-3">
                                         <button
                                             onClick={() => {
                                                 setIsEditing(false);
                                                 setEditingCommentId(null);
                                                 setEditingCommentDetail('');
                                             }}
-                                            className="px-6 py-2 rounded-md font-semibold text-gray-800 bg-gray-300 hover:bg-gray-400 transition-colors duration-200"
+                                            className="px-6 py-2.5 rounded-xl font-bold text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors duration-200"
                                         >
                                             Hủy
+                                        </button>
+                                        <button
+                                            onClick={handleSaveEdit}
+                                            disabled={posting || !editingCommentDetail.trim()}
+                                            className={`px-6 py-2.5 rounded-xl font-bold text-white transition-all duration-300 shadow-lg ${posting || !editingCommentDetail.trim()
+                                                ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 hover:-translate-y-0.5'
+                                                }`}
+                                        >
+                                            {posting ? 'Đang lưu...' : 'Lưu'}
                                         </button>
                                     </div>
                                 </div>
@@ -517,17 +519,18 @@ const Comments: React.FC = () => {
                                 sortedComments.map((comment) => (
                                     <div
                                         key={comment.commentId}
-                                        className="bg-white/10 p-4 rounded-md mb-4 shadow-md"
+                                        className="bg-slate-800/40 border border-slate-700/50 p-5 rounded-2xl mb-4 shadow-md hover:bg-slate-800/60 transition-colors duration-300"
                                     >
                                         <div className="flex justify-between items-center">
-                                            <p className="font-semibold text-yellow-400">
+                                            <p className="font-bold text-purple-400 text-sm md:text-base flex items-center gap-2">
+                                                <span className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-slate-300 text-xs">{comment.customerEmail.charAt(0).toUpperCase()}</span>
                                                 {comment.customerEmail}
                                                 {comment.customerEmail?.trim().toLowerCase() === userEmail?.trim().toLowerCase() && (
-                                                    <span className="ml-2 text-green-400 text-sm">(Bạn)</span>
+                                                    <span className="ml-2 text-sky-400 text-xs px-2 py-0.5 bg-sky-500/10 border border-sky-500/20 rounded-full">Bạn</span>
                                                 )}
                                             </p>
                                             <div className="flex items-center space-x-2">
-                                                <p className="text-sm text-gray-400">
+                                                <p className="text-xs text-slate-500">
                                                     {comment.commentDate && !isNaN(new Date(comment.commentDate).getTime())
                                                         ? `${new Date(comment.commentDate).toLocaleDateString('vi-VN')} ${new Date(comment.commentDate).toLocaleTimeString('vi-VN')}`
                                                         : 'Ngày không hợp lệ'}
@@ -536,13 +539,13 @@ const Comments: React.FC = () => {
                                                     <>
                                                         <button
                                                             onClick={() => handleEditComment(comment.commentId, comment.commentDetail)}
-                                                            className="text-blue-400 hover:text-blue-300 transition-colors"
+                                                            className="text-blue-400 hover:text-blue-300 text-sm ml-3 transition-colors"
                                                         >
                                                             Sửa
                                                         </button>
                                                         <button
                                                             onClick={() => handleDeleteComment(comment.commentId)}
-                                                            className="text-red-400 hover:text-red-300 transition-colors"
+                                                            className="text-red-400 hover:text-red-300 text-sm ml-2 transition-colors"
                                                         >
                                                             Xóa
                                                         </button>
@@ -550,7 +553,7 @@ const Comments: React.FC = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        <p className="text-white mt-2">{comment.commentDetail}</p>
+                                        <p className="text-slate-300 mt-3 ml-10 text-sm md:text-base leading-relaxed">{comment.commentDetail}</p>
                                     </div>
                                 ))
                             ) : (
@@ -560,30 +563,30 @@ const Comments: React.FC = () => {
                     </div>
                     <button
                         onClick={() => navigate(-1)}
-                        className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-md shadow-lg hover:bg-blue-700 transition-all"
+                        className="mt-10 px-8 py-3 bg-slate-800 border border-slate-700 text-slate-300 font-bold rounded-xl shadow-lg hover:bg-slate-700 hover:text-white transition-all duration-300 uppercase tracking-wider"
                     >
                         Quay lại
                     </button>
 
                     {/* Modal xác nhận đăng bình luận */}
                     {showConfirmModal && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                            <div className="bg-white p-6 rounded-lg shadow-xl w-80">
-                                <h3 className="text-xl font-bold mb-4">Xác nhận đăng bình luận</h3>
-                                <p className="mb-4">Bạn có chắc chắn muốn đăng bình luận này không?</p>
-                                <div className="text-gray-600 italic border-l-4 border-gray-300 pl-2 mb-4">
+                        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-up">
+                                <h3 className="text-2xl font-bold text-white mb-4">Xác nhận đăng tải</h3>
+                                <p className="text-slate-400 mb-6">Bạn có chắc chắn muốn đăng bình luận này không?</p>
+                                <div className="text-slate-300 italic border-l-4 border-purple-500 bg-slate-800/50 p-3 rounded-r-lg mb-8 text-sm">
                                     "{commentToPost}"
                                 </div>
-                                <div className="flex justify-end space-x-4">
+                                <div className="flex justify-end space-x-3">
                                     <button
                                         onClick={() => setShowConfirmModal(false)}
-                                        className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+                                        className="px-5 py-2.5 bg-slate-800 text-slate-300 border border-slate-700 rounded-xl hover:bg-slate-700 font-bold transition-colors"
                                     >
                                         Không
                                     </button>
                                     <button
                                         onClick={handleConfirmPost}
-                                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                                        className="px-5 py-2.5 bg-gradient-to-r from-sky-600 to-blue-600 text-white rounded-xl hover:from-sky-500 hover:to-blue-500 font-bold shadow-lg transition-all"
                                     >
                                         Có
                                     </button>
@@ -594,11 +597,11 @@ const Comments: React.FC = () => {
 
 
                     {showTrailer && (
-                        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-                            <div className="bg-black rounded-lg p-4 relative w-[90%] sm:w-[80%] md:w-[60%] aspect-video">
+                        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-2 sm:p-4 relative w-full max-w-5xl aspect-video shadow-2xl">
                                 <button
                                     onClick={() => setShowTrailer(false)}
-                                    className="absolute top-2 right-2 text-white text-xl sm:text-2xl font-bold"
+                                    className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6 w-10 h-10 sm:w-12 sm:h-12 bg-slate-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xl shadow-lg transition-colors duration-300 z-10"
                                 >
                                     ✕
                                 </button>
@@ -611,6 +614,7 @@ const Comments: React.FC = () => {
             <footer>
                 <Bottom />
             </footer>
+            </div>
         </div>
     );
 };

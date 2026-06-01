@@ -139,7 +139,16 @@ builder.Services.AddCors(options =>
 });
 
 Console.WriteLine(builder.Configuration.GetConnectionString("DefaultConnection"));
-
+// Thêm đoạn này trước dòng builder.Build();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // Điền đúng địa chỉ của VS Code xanh vào đây
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 var app = builder.Build();
 app.UseCors("AllowAll");
 using (var scoped = app.Services.CreateScope())
@@ -161,7 +170,8 @@ using (var scoped = app.Services.CreateScope())
 }
 app.UseSwagger();
 app.UseSwaggerUI();
-
+// Thêm đoạn này TRƯỚC dòng app.UseAuthorization();
+app.UseCors("AllowReactApp");
 app.UseAuthorization();
 
 app.MapControllers();
@@ -181,3 +191,4 @@ namespace backend
         public const string FacilitiesManager = "FacilitiesManager";
     }
 }
+

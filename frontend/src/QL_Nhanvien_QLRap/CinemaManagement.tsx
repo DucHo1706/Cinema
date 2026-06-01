@@ -35,19 +35,44 @@ const CinemaManagement: React.FC<CinemaManagementProps> = ({ cinemas, fetchCinem
     };
 
     const handleSaveCinema = async () => {
+        const rawToken = localStorage.getItem('authToken');
+        if (!rawToken) {
+            toast.error('Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.');
+            return;
+        }
+
+        // Loại bỏ dấu ngoặc kép thừa nếu token bị lưu dưới dạng JSON string
+        const authToken = rawToken.replace(/^"|"$/g, '');
+
         setIsLoading(true);
         try {
+            // Đổi tên các thuộc tính cho khớp với CreateCinemaRequestDTO ở Backend
+            const payload = {
+                name: newCinema.cinemaName,
+                location: newCinema.cinemaLocation,
+                description: newCinema.cinemaDescription,
+                hotline: newCinema.cinemaContactNumber,
+            };
+
             const response = await fetch(`${API_BASE_URL}/api/Cinema/addCinema`, {
                 method: 'POST',
                 headers: {
+                    'accept': '*/*',
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                    'Authorization': `Bearer ${authToken}`,
                 },
-                body: JSON.stringify(newCinema),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
-                throw new Error('Failed to add cinema');
+                const errorData = await response.json().catch(() => ({}));
+                if (response.status === 401) {
+                    throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng xuất và đăng nhập lại!');
+                }
+                if (response.status === 403) {
+                    throw new Error('Bạn không có quyền thực hiện chức năng thêm rạp.');
+                }
+                throw new Error(errorData.message || 'Không thể thêm rạp');
             }
 
             setIsAddModalOpen(false);
@@ -59,8 +84,8 @@ const CinemaManagement: React.FC<CinemaManagementProps> = ({ cinemas, fetchCinem
             });
             fetchCinemas();
             toast.success('Đã tạo rạp chiếu thành công!');
-        } catch (err) {
-            toast.error('Lỗi khi thêm rạp. Vui lòng thử lại.');
+        } catch (err: any) {
+            toast.error(`Lỗi khi thêm rạp: ${err.message}`);
         } finally {
             setIsLoading(false);
         }
@@ -72,26 +97,36 @@ const CinemaManagement: React.FC<CinemaManagementProps> = ({ cinemas, fetchCinem
             return;
         }
 
+        const rawToken = localStorage.getItem('authToken');
+        const authToken = rawToken ? rawToken.replace(/^"|"$/g, '') : '';
+
         setIsLoading(true);
         try {
             const response = await fetch(`${API_BASE_URL}/api/Cinema/deleteCinema/${selectedCinemaId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                    'Authorization': `Bearer ${authToken}`,
                 },
             });
 
             if (!response.ok) {
-                throw new Error('Failed to delete cinema');
+                const errorData = await response.json().catch(() => ({}));
+                if (response.status === 401) {
+                    throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng xuất và đăng nhập lại!');
+                }
+                if (response.status === 403) {
+                    throw new Error('Bạn không có quyền thực hiện chức năng xóa rạp.');
+                }
+                throw new Error(errorData.message || 'Không thể xóa rạp');
             }
 
             setIsDeleteModalOpen(false);
             setSelectedCinemaId('');
             fetchCinemas();
             toast.success('Đã xóa rạp thành công!');
-        } catch (err) {
-            toast.error('Lỗi khi xóa rạp. Có thể rạp đang được sử dụng hoặc có lịch chiếu.');
+        } catch (err: any) {
+            toast.error(err.message || 'Lỗi khi xóa rạp. Có thể rạp đang được sử dụng hoặc có lịch chiếu.');
         } finally {
             setIsLoading(false);
         }

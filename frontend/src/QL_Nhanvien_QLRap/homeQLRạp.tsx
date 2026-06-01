@@ -10,6 +10,7 @@ import GenreManagement from "./GenreManagement";
 import StaffManagement from "./StaffManagement";
 import CinemaManagement from "./CinemaManagement";
 import { ToastContainer, toast } from 'react-toastify';
+// @ts-ignore: CSS module declaration not present in this file
 import 'react-toastify/dist/ReactToastify.css';
 import { API_BASE_URL } from '../config/constants';
 
@@ -111,7 +112,7 @@ const Info: React.FC = () => {
             setquanlity(1);
         }
     };
-    
+
     const handleSubmitOrder = async () => {
         if (!customerEmail) {
             toast.warning('Vui lòng nhập email khách hàng!');
@@ -250,281 +251,270 @@ const Info: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-fixed bg-cover bg-center" style={{ backgroundImage: "url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')" }}>
-            <ToastContainer position="bottom-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="dark" />
-            <div className="sticky top-0 z-50 bg-slate-900 shadow-md mb-4">
-                <div className="max-w-screen-xl mx-auto px-8"><Nav /></div>
+        <div className="relative min-h-screen w-full font-sans selection:bg-purple-500/30 text-slate-200">
+            <div className="fixed inset-0 z-0">
+                <div className="absolute inset-0 bg-[url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')] bg-cover bg-center opacity-20"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-slate-950/80 to-slate-950"></div>
             </div>
-            <div className="max-w-6xl mx-auto py-10 px-4 md:flex gap-8">
-                <div className="sticky top-32 h-fit self-start bg-white/20 backdrop-blur-md p-4 rounded-xl w-full md:w-1/4 space-y-4 shadow-lg">
-                    <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "password" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("password")}>Đổi mật khẩu</button>
-                    {(isDirector || roles1.includes('TheaterManager')) && (
-                        <div className="mt-6 pt-6 border-t border-white/30">
-                            <h3 className="text-lg font-bold text-DarkRed mb-4 text-yellow-400">Quản Lý Rạp</h3>
-                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "nhanvien" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("nhanvien")}>Danh sách nhân viên</button>
-                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "schedule" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("schedule")}>Tạo lịch chiếu</button>
-                        </div>
-                    )}
-                    {(isDirector || roles1.includes('MovieManager')) && (
-                        <div className="mt-6 pt-6 border-t border-white/30">
-                            <h3 className="text-lg font-bold text-DarkRed mb-4 text-yellow-400">Quản Lý Nội Dung</h3>
-                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium hover:bg-white/30 text-white`} onClick={() => navigate('/Addmovie')}>Quản Lý Phim</button>
-                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "theloai" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("theloai")}>Quản Lý Thể Loại</button>
-                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "binhluan" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("binhluan")}>Quản Lý Bình Luận</button>
-                        </div>
-                    )}
-                    {(isDirector || roles1.includes('Cashier')) && (
-                        <div className="mt-6 pt-6 border-t border-white/30">
-                            <h3 className="text-lg font-bold text-DarkRed mb-4 text-yellow-400">Thu Ngân</h3>
-                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "xacdinhdichvu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("xacdinhdichvu")}>Xác nhận dịch vụ</button>
-                        </div>
-                    )}
-                    {isDirector && (
-                        <div className="mt-6 pt-6 border-t border-white/30">
-                            <h3 className="text-lg font-bold text-DarkRed mb-4 text-yellow-400">Giám đốc</h3>
-                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "doanhthu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("doanhthu")}>Doanh thu</button>
-                        </div>
-                    )}
-                    {(isDirector || roles1.includes('FacilitiesManager')) && (
-                        <div className="mt-6 pt-6 border-t border-white/30">
-                            <h3 className="text-lg font-bold text-DarkRed mb-4 text-yellow-400">Quản trị viên hệ thống</h3>
-                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "csphongrap" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("csphongrap")}>Chỉnh sửa rạp</button>
-                        </div>
-                    )}
+            <div className="relative z-10 flex flex-col min-h-screen">
+                <ToastContainer position="bottom-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="dark" />
+                <div className="sticky top-0 z-50 bg-slate-950 shadow-md mb-4 border-b border-slate-800/50">
+                    <div className="max-w-screen-xl mx-auto px-8"><Nav /></div>
                 </div>
-                <div className="flex-1 space-y-8 mt-8 md:mt-0">
-                    <h1 className="text-white text-3xl font-bold text-center uppercase">Cinema xin chào! {userEmail}</h1>
-
-                    {activeTab === "password" && (
-                        <div className="max-w-4xl mx-auto bg-white/10 rounded-xl shadow-2xl overflow-hidden p-8 animate-[slideInFromLeft_1s_ease-out]">
-                            <div className="bg-white/10 p-6 rounded-2xl shadow-xl text-white">
-                                <h2 className="text-2xl font-bold mb-6">Đổi mật khẩu</h2>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block mb-3 font-semibold">Mật khẩu cũ</label>
-                                        <input
-                                            type="password"
-                                            className="w-full border rounded-md px-4 py-2 bg-white/10"
-                                            value={oldPassword}
-                                            onChange={(e) => setOldPassword(e.target.value)}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block mb-2 font-semibold">Mật khẩu mới</label>
-                                        <input
-                                            type="password"
-                                            className="w-full border rounded-md px-4 py-2 bg-white/10"
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block mb-2 font-semibold">Xác nhận mật khẩu mới</label>
-                                        <input
-                                            type="password"
-                                            className="w-full border rounded-md px-4 py-2 bg-white/10"
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-                                {message1 && (
-                                    <p className={`mt-4 text-center font-semibold ${message1.includes('Lỗi:') ? 'text-red-500' : 'text-green-600'}`}>
-                                        {message1}
-                                    </p>
-                                )}
-
-                                <div className="mt-6 text-center">
-                                    <button
-                                        onClick={handleChangePassword}
-                                        type="submit"
-                                        disabled={loading}
-                                        className="relative cursor-pointer py-4 px-8 text-center font-barlow inline-flex justify-center text-base uppercase text-white rounded-lg border-solid transition-transform duration-300 ease-in-out group outline-offset-4 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-4 overflow-hidden">
-                                        {loading ?
-                                            'Đang cập nhật mật khẩu...' : 'Cập nhật mật khẩu'}
-
-                                        <span
-                                            className="absolute left-[-75%] top-0 h-full w-[50%] bg-white/20 rotate-12 z-10 blur-lg group-hover:left-[125%] transition-all duration-1000 ease-in-out"
-                                        ></span>
-
-                                        <span
-                                            className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute h-[20%] rounded-tl-lg border-l-2 border-t-2 top-0 left-0"
-                                        ></span>
-                                        <span
-                                            className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute group-hover:h-[90%] h-[60%] rounded-tr-lg border-r-2 border-t-2 top-0 right-0"
-                                        ></span>
-                                        <span
-                                            className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute h-[60%] group-hover:h-[90%] rounded-bl-lg border-l-2 border-b-2 left-0 bottom-0"
-                                        ></span>
-                                        <span
-                                            className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute h-[20%] rounded-br-lg border-r-2 border-b-2 right-0 bottom-0"
-                                        ></span>
-                                    </button>
-                                </div>
+                <div className="max-w-6xl mx-auto py-10 px-4 md:flex gap-8">
+                    <div className="sticky top-32 h-fit self-start bg-slate-900/80 border border-slate-800 backdrop-blur-xl p-5 rounded-2xl w-full md:w-[28%] space-y-4 shadow-2xl">
+                        <button className={`w-full px-5 py-3 rounded-xl text-left font-bold transition-all duration-300 ${activeTab === "password" ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/30" : "hover:bg-slate-800 text-slate-400 hover:text-white"}`} onClick={() => setActiveTab("password")}>Đổi mật khẩu</button>
+                        {(isDirector || roles1.includes('TheaterManager')) && (
+                            <div className="mt-6 pt-6 border-t border-slate-700">
+                                <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-rose-400 mb-4 uppercase tracking-wider pl-2">Quản Lý Rạp</h3>
+                                <button className={`w-full px-5 py-3 rounded-xl text-left font-bold transition-all duration-300 mb-2 ${activeTab === "nhanvien" ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/30" : "hover:bg-slate-800 text-slate-400 hover:text-white"}`} onClick={() => setActiveTab("nhanvien")}>Danh sách nhân viên</button>
+                                <button className={`w-full px-5 py-3 rounded-xl text-left font-bold transition-all duration-300 ${activeTab === "schedule" ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/30" : "hover:bg-slate-800 text-slate-400 hover:text-white"}`} onClick={() => setActiveTab("schedule")}>Tạo lịch chiếu</button>
                             </div>
-                        </div>
-
-                    )}
-                    {activeTab === 'nhanvien' && (isDirector || roles1.includes('TheaterManager')) && (
-                        <StaffManagement cinemas={cinemas} />
-                    )}
-
-                    {activeTab === "theloai" && (isDirector || roles1.includes('MovieManager')) && (
-                    <GenreManagement />
-                    )}
-                    {activeTab === "binhluan" && (isDirector || roles1.includes('MovieManager')) && (
-                        <div className="min-h-screen bg-gradient-to-b from-gray-700/70 to-gray-500/50 font-sans py-10 px-4 rounded-2xl">
-                            <div className="max-w-6xl mx-auto">
-                                <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-xl">
-                                    <h2 className="text-3xl font-bold text-yellow-400 mb-6 tracking-wide">Quản Lý Bình Luận</h2>
-                                    <div className="bg-white/5 rounded-lg p-8 text-center border border-dashed border-gray-500">
-                                        <p className="text-gray-300 text-lg mb-2">Tính năng đang được phát triển</p>
-                                        <p className="text-gray-400 text-sm">Giao diện duyệt, ẩn và xóa bình luận vi phạm của người dùng sẽ hiển thị tại đây.</p>
-                                    </div>
-                                </div>
+                        )}
+                        {(isDirector || roles1.includes('MovieManager')) && (
+                            <div className="mt-6 pt-6 border-t border-slate-700">
+                                <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-400 mb-4 uppercase tracking-wider pl-2">Quản Lý Nội Dung</h3>
+                                <button className={`w-full px-5 py-3 rounded-xl text-left font-bold transition-all duration-300 mb-2 hover:bg-slate-800 text-slate-400 hover:text-white`} onClick={() => navigate('/Addmovie')}>Quản Lý Phim</button>
+                                <button className={`w-full px-5 py-3 rounded-xl text-left font-bold transition-all duration-300 mb-2 ${activeTab === "theloai" ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/30" : "hover:bg-slate-800 text-slate-400 hover:text-white"}`} onClick={() => setActiveTab("theloai")}>Quản Lý Thể Loại</button>
+                                <button className={`w-full px-5 py-3 rounded-xl text-left font-bold transition-all duration-300 ${activeTab === "binhluan" ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/30" : "hover:bg-slate-800 text-slate-400 hover:text-white"}`} onClick={() => setActiveTab("binhluan")}>Quản Lý Bình Luận</button>
                             </div>
-                        </div>
-                    )}
-                    {activeTab === "schedule" && (
-                        <div>
-                            <SCHEDULE />
-                        </div>
-                    )}
-                    {activeTab === "doanhthu" && isDirector && (
-                        <div>
-                            <RevenueList />
-                        </div>
-                    )}
-                    {activeTab === "xacdinhdichvu" && (isDirector || roles1.includes('Cashier')) && (
-                        <div className="p-4 max-w-4xl rounded-xl mx-auto bg-gradient-to-b from-gray-700/70 to-gray-500/50">
-                            {/* Error Message */}
-                            {errorFood && (
-                                <div className="bg-red-600/10 text-red-400 p-4 mb-4 rounded-md border border-red-500/30">
-                                    {errorFood}
-                                </div>
-                            )}
+                        )}
+                        {(isDirector || roles1.includes('Cashier')) && (
+                            <div className="mt-6 pt-6 border-t border-slate-700">
+                                <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 mb-4 uppercase tracking-wider pl-2">Thu Ngân</h3>
+                                <button className={`w-full px-5 py-3 rounded-xl text-left font-bold transition-all duration-300 ${activeTab === "xacdinhdichvu" ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/30" : "hover:bg-slate-800 text-slate-400 hover:text-white"}`} onClick={() => setActiveTab("xacdinhdichvu")}>Xác nhận dịch vụ</button>
+                            </div>
+                        )}
+                        {isDirector && (
+                            <div className="mt-6 pt-6 border-t border-slate-700">
+                                <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400 mb-4 uppercase tracking-wider pl-2">Giám đốc</h3>
+                                <button className={`w-full px-5 py-3 rounded-xl text-left font-bold transition-all duration-300 ${activeTab === "doanhthu" ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/30" : "hover:bg-slate-800 text-slate-400 hover:text-white"}`} onClick={() => setActiveTab("doanhthu")}>Doanh thu</button>
+                            </div>
+                        )}
+                        {(isDirector || roles1.includes('FacilitiesManager')) && (
+                            <div className="mt-6 pt-6 border-t border-slate-700">
+                                <h3 className="text-sm font-bold text-slate-400 mb-4 uppercase tracking-wider pl-2">Quản trị viên hệ thống</h3>
+                                <button className={`w-full px-5 py-3 rounded-xl text-left font-bold transition-all duration-300 ${activeTab === "csphongrap" ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/30" : "hover:bg-slate-800 text-slate-400 hover:text-white"}`} onClick={() => setActiveTab("csphongrap")}>Chỉnh sửa rạp</button>
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex-1 space-y-8 mt-8 md:mt-0">
+                        <h1 className="text-transparent bg-clip-text bg-gradient-to-r from-slate-200 to-slate-400 text-3xl font-extrabold text-center tracking-wider">XIN CHÀO! <span className="text-purple-400">{userEmail?.split('@')[0]}</span></h1>
 
-                            {/* Order Form */}
-                            <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-yellow-500/30">
-                                <h2 className="text-2xl font-bold text-white mb-6">Đặt Hàng Mới</h2>
+                        {activeTab === "password" && (
+                            <div className="max-w-4xl mx-auto bg-slate-900/80 border border-slate-800 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden p-8 md:p-12 animate-fade-in-up">
+                                <div className="text-white">
+                                    <h2 className="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-500">Đổi Mật Khẩu</h2>
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block mb-2 text-sm font-semibold text-slate-400 uppercase tracking-wider">Mật khẩu cũ</label>
+                                            <input
+                                                type="password"
+                                                className="w-full border border-slate-700 rounded-xl px-4 py-3 bg-slate-950/50 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                                                value={oldPassword}
+                                                onChange={(e) => setOldPassword(e.target.value)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block mb-2 text-sm font-semibold text-slate-400 uppercase tracking-wider">Mật khẩu mới</label>
+                                            <input
+                                                type="password"
+                                                className="w-full border border-slate-700 rounded-xl px-4 py-3 bg-slate-950/50 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                                                value={newPassword}
+                                                onChange={(e) => setNewPassword(e.target.value)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block mb-2 text-sm font-semibold text-slate-400 uppercase tracking-wider">Xác nhận mật khẩu mới</label>
+                                            <input
+                                                type="password"
+                                                className="w-full border border-slate-700 rounded-xl px-4 py-3 bg-slate-950/50 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    {message1 && (
+                                        <p className={`mt-4 text-center font-semibold ${message1.includes('Lỗi:') ? 'text-red-500' : 'text-green-600'}`}>
+                                            {message1}
+                                        </p>
+                                    )}
 
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">Email Khách Hàng</label>
-                                    <input
-                                        type="text"
-                                        value={customerEmail}
-                                        onChange={(e) => setCustomerEmail(e.target.value)}
-                                        placeholder="Nhập email khách hàng"
-                                        className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                    />
-                                </div>
-
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">Ngày Đặt Hàng</label>
-                                    <input
-                                        type="text"
-                                        value={new Date().toLocaleDateString()}
-                                        disabled
-                                        className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2"
-                                    />
-                                </div>
-
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">Chọn Món</label>
-                                    <div className="flex gap-2">
-                                        <select
-                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                            value={selectedFoodId}
-                                            onChange={(e) => setSelectedFoodId(e.target.value)}
-                                        >
-                                            <option value="">Chọn món</option>
-                                            {Array.isArray(foodItems) && foodItems.length > 0 ? (
-                                                foodItems.map((item) => (
-                                                    <option key={item.foodId} value={item.foodId}>{item.foodName}</option>
-                                                ))
-                                            ) : (
-                                                <option disabled>Không có món nào</option>
-                                            )}
-                                        </select>
-                                        <select
-                                            className="w-24 p-2 border rounded-md"
-                                            value={quanlity}
-                                            onChange={(e) => setquanlity(Number(e.target.value))}
-                                        >
-                                            {[1, 2, 3, 4].map((num) => (
-                                                <option key={num} value={num}>{num}</option>
-                                            ))}
-                                        </select>
+                                    <div className="mt-6 text-center">
                                         <button
-                                            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
-                                            onClick={handleAddItem}
-                                        >
-                                            Thêm
+                                            onClick={handleChangePassword}
+                                            type="submit"
+                                            disabled={loading}
+                                            className="w-full md:w-auto px-10 py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg hover:shadow-purple-500/30 transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 tracking-wider">
+                                            {loading ?
+                                                'Đang cập nhật mật khẩu...' : 'Cập nhật mật khẩu'}
                                         </button>
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Selected Items List */}
-                                {orderItems.length > 0 && (
-                                    <div className="mb-4">
-                                        <h3 className="text-sm font-medium text-white mb-2">Danh Sách Món Đã Chọn</h3>
-                                        <ul className="list-disc pl-5 text-white bg-white/10 rounded-md p-4">
-                                            {orderItems.map((item, index) => {
-                                                const food = foodItems.find(f => f.foodId === item.productId);
-                                                return (
-                                                    <li key={index} className="flex items-center gap-2">
-                                                        {food?.foodName || 'Unknown Item'} - quanlity: {item.quanlity}
-                                                        <button
-                                                            className="bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700 transition"
-                                                            onClick={() => handleDeleteStaffOrder(index)}
-                                                        >
-                                                            Xóa
-                                                        </button>
-                                                    </li>
-                                                );
-                                            })}
-                                        </ul>
+                        )}
+                        {activeTab === 'nhanvien' && (isDirector || roles1.includes('TheaterManager')) && (
+                            <StaffManagement cinemas={cinemas} />
+                        )}
+
+                        {activeTab === "theloai" && (isDirector || roles1.includes('MovieManager')) && (
+                            <GenreManagement />
+                        )}
+                        {activeTab === "binhluan" && (isDirector || roles1.includes('MovieManager')) && (
+                            <div className="min-h-[60vh] font-sans py-10 rounded-2xl">
+                                <div className="max-w-6xl mx-auto">
+                                    <div className="bg-slate-900/80 border border-slate-800 backdrop-blur-xl p-8 rounded-3xl shadow-2xl">
+                                        <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-500 mb-8 tracking-wide">Quản Lý Bình Luận</h2>
+                                        <div className="bg-slate-950/50 rounded-2xl p-12 text-center border-2 border-dashed border-slate-700">
+                                            <p className="text-slate-300 text-xl font-bold mb-3">Tính năng đang được phát triển 🛠</p>
+                                            <p className="text-slate-500">Giao diện duyệt, ẩn và xóa bình luận vi phạm của người dùng sẽ hiển thị tại đây.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {activeTab === "schedule" && (
+                            <div>
+                                <SCHEDULE />
+                            </div>
+                        )}
+                        {activeTab === "doanhthu" && isDirector && (
+                            <div>
+                                <RevenueList />
+                            </div>
+                        )}
+                        {activeTab === "xacdinhdichvu" && (isDirector || roles1.includes('Cashier')) && (
+                            <div className="max-w-4xl rounded-3xl mx-auto">
+                                {/* Error Message */}
+                                {errorFood && (
+                                    <div className="bg-red-500/10 text-red-400 p-4 mb-6 rounded-xl border border-red-500/30">
+                                        {errorFood}
                                     </div>
                                 )}
 
-                                <div className="flex justify-end gap-2">
-                                    <button
-                                        className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition"
-                                        onClick={() => {
-                                            setOrderItems([]);
-                                            setCustomerEmail('');
-                                        }}
-                                    >
-                                        Hủy
-                                    </button>
-                                    <button
-                                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                        onClick={handleSubmitOrder}
-                                        disabled={orderItems.length === 0}
-                                    >
-                                        Gửi Đơn Hàng
-                                    </button>
+                                {/* Order Form */}
+                                <div className="bg-slate-900/80 border border-slate-800 backdrop-blur-xl p-8 rounded-3xl shadow-2xl">
+                                    <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 mb-8 tracking-wide">Đặt Hàng Mới</h2>
+
+                                    <div className="mb-6">
+                                        <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Email Khách Hàng</label>
+                                        <input
+                                            type="text"
+                                            value={customerEmail}
+                                            onChange={(e) => setCustomerEmail(e.target.value)}
+                                            placeholder="Nhập email khách hàng"
+                                            className="w-full bg-slate-950/50 text-white border border-slate-700 rounded-xl p-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                                        />
+                                    </div>
+
+                                    <div className="mb-6">
+                                        <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Ngày Đặt Hàng</label>
+                                        <input
+                                            type="text"
+                                            value={new Date().toLocaleDateString()}
+                                            disabled
+                                            className="w-full bg-slate-800/50 text-slate-400 border border-slate-700 rounded-xl p-3.5 cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    <div className="mb-8">
+                                        <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Chọn Món</label>
+                                        <div className="flex gap-2">
+                                            <select
+                                                className="w-full bg-slate-950/50 text-white border border-slate-700 rounded-xl p-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                                                value={selectedFoodId}
+                                                onChange={(e) => setSelectedFoodId(e.target.value)}
+                                            >
+                                                <option value="">Chọn món</option>
+                                                {Array.isArray(foodItems) && foodItems.length > 0 ? (
+                                                    foodItems.map((item) => (
+                                                        <option key={item.foodId} value={item.foodId}>{item.foodName}</option>
+                                                    ))
+                                                ) : (
+                                                    <option disabled>Không có món nào</option>
+                                                )}
+                                            </select>
+                                            <select
+                                                className="w-24 p-3.5 border border-slate-700 rounded-xl bg-slate-950/50 text-white"
+                                                value={quanlity}
+                                                onChange={(e) => setquanlity(Number(e.target.value))}
+                                            >
+                                                {[1, 2, 3, 4].map((num) => (
+                                                    <option key={num} value={num}>{num}</option>
+                                                ))}
+                                            </select>
+                                            <button
+                                                className="bg-emerald-600 text-white px-6 py-3.5 rounded-xl font-bold hover:bg-emerald-500 transition-colors shadow-lg"
+                                                onClick={handleAddItem}
+                                            >
+                                                Thêm
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Selected Items List */}
+                                    {orderItems.length > 0 && (
+                                        <div className="mb-8">
+                                            <h3 className="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">Danh Sách Món Đã Chọn</h3>
+                                            <ul className="space-y-2 bg-slate-950/50 rounded-xl p-4 border border-slate-800">
+                                                {orderItems.map((item, index) => {
+                                                    const food = foodItems.find(f => f.foodId === item.productId);
+                                                    return (
+                                                        <li key={index} className="flex items-center justify-between text-slate-200 border-b border-slate-800/50 pb-2 last:border-0 last:pb-0">
+                                                            <span><span className="font-bold text-emerald-400">{food?.foodName || 'Unknown Item'}</span> (x{item.quanlity})</span>
+                                                            <button
+                                                                className="text-red-400 hover:text-red-300 text-sm font-bold bg-red-500/10 px-3 py-1 rounded-lg transition"
+                                                                onClick={() => handleDeleteStaffOrder(index)}
+                                                            >
+                                                                Xóa
+                                                            </button>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    <div className="flex justify-end gap-2">
+                                        <button
+                                            className="bg-slate-800 text-slate-300 px-6 py-3 rounded-xl font-bold hover:bg-slate-700 border border-slate-700 transition"
+                                            onClick={() => {
+                                                setOrderItems([]);
+                                                setCustomerEmail('');
+                                            }}
+                                        >
+                                            Hủy
+                                        </button>
+                                        <button
+                                            className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-3 rounded-xl font-bold hover:from-emerald-500 hover:to-teal-500 shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed tracking-wide"
+                                            onClick={handleSubmitOrder}
+                                            disabled={orderItems.length === 0}
+                                        >
+                                            Gửi Đơn Hàng
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
-                    {activeTab === 'csphongrap' && (isDirector || roles1.includes('FacilitiesManager')) && (
-                    <CinemaManagement cinemas={cinemas} fetchCinemas={fetchCinemas} />
-                )}
-                </div>
-            </div>
-            <div className="flex justify-center mt-10">
-                <button className="group flex items-center justify-start w-11 h-11 bg-red-600 rounded-full cursor-pointer relative overflow-hidden transition-all duration-200 shadow-lg hover:w-32 hover:rounded-lg active:translate-x-1 active:translate-y-1">
-                    <div className="flex items-center justify-center w-full transition-all duration-300 group-hover:justify-start group-hover:px-3">
-                        <svg className="w-4 h-4" viewBox="0 0 512 512" fill="white">
-                            <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"></path>
-                        </svg>
+                        )}
+                        {activeTab === 'csphongrap' && (isDirector || roles1.includes('FacilitiesManager')) && (
+                            <CinemaManagement cinemas={cinemas} fetchCinemas={fetchCinemas} />
+                        )}
                     </div>
-                    <div onClick={handleLogout} className="absolute right-3 transform translate-x-full opacity-0 text-white text-lg font-semibold transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">Đăng xuất</div>
-                </button>
+                </div>
+                <div className="flex justify-center mt-10">
+                    <button className="group flex items-center justify-start w-12 h-12 bg-red-600 rounded-full cursor-pointer relative overflow-hidden transition-all duration-300 shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:w-36 hover:rounded-xl active:translate-x-1 active:translate-y-1">
+                        <div className="flex items-center justify-center w-full transition-all duration-300 group-hover:justify-start group-hover:px-3">
+                            <svg className="w-4 h-4" viewBox="0 0 512 512" fill="white">
+                                <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"></path>
+                            </svg>
+                        </div>
+                        <div onClick={handleLogout} className="absolute right-4 transform translate-x-full opacity-0 text-white text-sm font-bold uppercase tracking-wider transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">Đăng xuất</div>
+                    </button>
+                </div>
+                <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointer">↑</button>
+                <div className="sticky mx-auto mt-28"><Bottom /></div>
             </div>
-            <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointer">↑</button>
-            <div className="sticky mx-auto mt-28"><Bottom /></div>
         </div>
 
     );

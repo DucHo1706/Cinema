@@ -6,7 +6,7 @@ import bg from "../image/bg.png";
 import { Navigate, useNavigate } from "react-router";
 import { API_BASE_URL } from '../config/constants';
 
-// Interfaces (Không thay đổi)
+// Interfaces
 interface Genre {
     genreId: string;
     genreName: string;
@@ -53,11 +53,18 @@ interface FormState {
     ageId: string;
 }
 
-const TOKEN = localStorage.getItem('authToken');
-
 const AddMovie: React.FC = () => {
     const [theloaiOptions, setTheloaiOptions] = useState<Genre[]>([]);
-    const [ageOptions] = useState<string[]>(['P (Mọi lứa tuổi)', 'T13 (Từ 13 tuổi)', 'T16 (Từ 16 tuổi)', 'T18 (Từ 18 tuổi)', 'K (Khác)']);
+
+    // ĐÃ SỬA: Chuyển mảng string thành mảng Object để gửi mã ngắn gọn xuống Backend
+    const [ageOptions] = useState<{ value: string, label: string }[]>([
+        { value: 'P', label: 'P (Mọi lứa tuổi)' },
+        { value: 'T13', label: 'T13 (Từ 13 tuổi trở lên)' },
+        { value: 'T16', label: 'T16 (Từ 16 tuổi trở lên)' },
+        { value: 'T18', label: 'T18 (Từ 18 tuổi trở lên)' },
+        { value: 'K', label: 'K (Khác)' }
+    ]);
+
     const [languageOptions] = useState<string[]>(['Tiếng Việt', 'Tiếng Anh (Phụ đề Việt)', 'Tiếng Hàn (Phụ đề Việt)', 'Tiếng Nhật (Phụ đề Việt)', 'Lồng Tiếng']);
     const [movies, setMovies] = useState<Movie[]>([]);
     const [form, setForm] = useState<FormState>({
@@ -98,10 +105,11 @@ const AddMovie: React.FC = () => {
     }, [movies]);
 
     const fetchData = async (url: string, setData: (data: any) => void, errorMessage: string) => {
+        const currentToken = localStorage.getItem('authToken');
         try {
             const res = await fetch(url, {
                 headers: {
-                    Authorization: `Bearer ${TOKEN}`,
+                    Authorization: `Bearer ${currentToken}`,
                 },
             });
             if (!res.ok) {
@@ -127,14 +135,15 @@ const AddMovie: React.FC = () => {
         fetchData(
             `${API_BASE_URL}/api/movie/getAllMoviesPagniation/${page}`,
             (data) => {
-                const formattedMovies = (Array.isArray(data.movieRespondDTOs) ? data.movieRespondDTOs : []).map((item: any) => ({
-                    movieId: item.movieID || undefined,
+                const moviesData = data.movieRespondDTOs || data.data || data;
+                const formattedMovies = (Array.isArray(moviesData) ? moviesData : []).map((item: any) => ({
+                    movieId: item.movieID || item.movieId || undefined,
                     name: item.movieName || "Không có tên",
                     image: item.movieImage || null,
                     description: item.movieDescription || "Không có mô tả",
                     director: item.movieDirector || "Không có đạo diễn",
                     cast: item.movieActor || "Không có diễn viên",
-                    trailer: item.movieTrailerUrl || "",
+                    trailer: item.movieTrailerUrl || item.trailerURL || "",
                     duration: item.movieDuration || 0,
                     ageLimit: item.ageRating || "",
                     language: item.language || "Không có ngôn ngữ",
@@ -142,14 +151,15 @@ const AddMovie: React.FC = () => {
                     genres: item.movieGenres || [],
                 }));
                 setMovies(formattedMovies);
-                setTotalPages(Math.ceil(data.totalCount / data.pageSize));
+                setTotalPages(Math.ceil((data.totalCount || 1) / (data.pageSize || 1)));
             },
             "Không thể tải danh sách phim"
         );
     };
 
     useEffect(() => {
-        if (!TOKEN) {
+        const currentToken = localStorage.getItem('authToken');
+        if (!currentToken) {
             setLoi("Không tìm thấy token xác thực");
             setLoading(false);
             return;
@@ -195,7 +205,7 @@ const AddMovie: React.FC = () => {
         setThanhCong("");
         setIsSubmitting(true);
 
-        // Validation logic (Không thay đổi)
+        // Validation logic
         if (!form.name) {
             setLoi("Vui lòng nhập tên phim");
             setIsSubmitting(false);
@@ -273,7 +283,7 @@ const AddMovie: React.FC = () => {
             setIsSubmitting(false);
             return;
         }
-        
+
         const formData = new FormData();
         formData.append("Title", form.name);
         formData.append("Description", form.description);
@@ -290,6 +300,7 @@ const AddMovie: React.FC = () => {
         }
 
         try {
+            const currentToken = localStorage.getItem('authToken');
             const url = editIndex !== null
                 ? `${API_BASE_URL}/api/movie/editMovie?movieID=${movies[editIndex].movieId}`
                 : `${API_BASE_URL}/api/movie/createMovie`;
@@ -298,13 +309,13 @@ const AddMovie: React.FC = () => {
                 method,
                 url,
                 headers: {
-                    Authorization: `Bearer ${TOKEN}`,
+                    Authorization: `Bearer ${currentToken}`,
                     "Content-Type": "multipart/form-data",
                 },
                 data: formData as any,
                 timeout: 30000,
             });
-            
+
             console.log("Phản hồi từ API (create/update):", res.data);
 
             if (res.status === 200 || res.status === 201 || res.status === 204) {
@@ -344,7 +355,7 @@ const AddMovie: React.FC = () => {
             setIsSubmitting(false);
         }
     };
-    
+
     // =================================================================
     // ================== HÀM HANDLEEDIT ĐÃ CẬP NHẬT ==================
     // =================================================================
@@ -361,9 +372,10 @@ const AddMovie: React.FC = () => {
         window.scrollTo(0, 0); // Cuộn lên đầu trang để xem biểu mẫu
 
         try {
+            const currentToken = localStorage.getItem('authToken');
             const res = await fetch(`${API_BASE_URL}/api/movie/getMovieDetail/${movie.movieId}`, {
                 headers: {
-                    Authorization: `Bearer ${TOKEN}`,
+                    Authorization: `Bearer ${currentToken}`,
                 },
             });
 
@@ -374,7 +386,7 @@ const AddMovie: React.FC = () => {
 
             const result = await res.json();
             if (result.status !== "Success") {
-                 throw new Error(`Lỗi từ API: ${result.message}`);
+                throw new Error(`Lỗi từ API: ${result.message}`);
             }
 
             const movieDetails = result.data;
@@ -397,7 +409,7 @@ const AddMovie: React.FC = () => {
             setSelectedGenres(genreIds);
             setSelectedFile(null); // Xóa lựa chọn tệp trước đó
             setEditIndex(index); // Theo dõi chỉ mục để gửi đi
-            
+
         } catch (err: any) {
             setLoi(err.message);
         } finally {
@@ -415,9 +427,10 @@ const AddMovie: React.FC = () => {
             const movieId = movies[deleteIndex].movieId;
             if (movieId) {
                 try {
+                    const currentToken = localStorage.getItem('authToken');
                     await axios.delete(`${API_BASE_URL}/api/movie/DeleteMovie/${movieId}`, {
                         headers: {
-                            Authorization: `Bearer ${TOKEN}`,
+                            Authorization: `Bearer ${currentToken}`,
                             accept: '*/*'
                         },
                     });
@@ -440,32 +453,32 @@ const AddMovie: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-cover bg-fixed bg-center" style={{ backgroundImage: `url(${bg})` }}>
-            <header className="sticky top-0 z-50 bg-slate-950 shadow-md mb-4">
+        <div className="relative min-h-screen w-full font-sans selection:bg-purple-500/30 text-slate-200 flex flex-col">
+            <div className="fixed inset-0 z-0">
+                <div className="absolute inset-0 bg-[url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')] bg-cover bg-center opacity-20"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-slate-950/80 to-slate-950"></div>
+            </div>
+            <div className="relative z-10 flex flex-col min-h-screen">
+            <header className="sticky top-0 z-50 bg-slate-950 shadow-md mb-4 border-b border-slate-800/50">
                 <div className="max-w-screen-xl mx-auto px-4 sm:px-8"><Nav /></div>
             </header>
 
             <main className="flex-grow">
-                <h2 className="text-2xl sm:text-4xl font-bold text-yellow-400 text-center uppercase mt-8 sm:mt-14 mb-6">
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-500 text-center uppercase tracking-wider mt-8 sm:mt-12 mb-8">
                     {editIndex !== null ? "Cập nhật phim" : "Thêm phim"}
                 </h2>
 
                 <form onSubmit={handleSubmit}>
-                    <div className="flex justify-start items-start ml-[440px]">
-                        <button className="cursor-pointer duration-200 hover:scale-125 active:scale-100" title="Go Back"
-                            onClick={handleHome}>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="50px" height="50px" viewBox="0 0 24 24" className="stroke-blue-300">
-                                <path stroke-linejoin="round" stroke-linecap="round" stroke-width="1.5" d="M11 6L5 12M5 12L11 18M5 12H19"></path>
-                            </svg>
+                    <div className="flex justify-start items-start max-w-4xl mx-auto px-4 sm:px-0 mb-4">
+                        <button className="flex items-center gap-2 text-slate-400 hover:text-purple-400 font-bold transition-colors duration-300"
+                            onClick={handleHome} type="button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            Quay lại
                         </button>
                     </div>
                     <div className="flex justify-center px-4 sm:px-0">
                         <div
-                            className="w-full sm:w-3/4 md:w-2/3 max-w-4xl backdrop-blur-md p-4 sm:p-6 rounded-xl shadow-xl space-y-4 relative z-10"
-                            style={{
-                                backgroundImage:
-                                    "url('https://www.lfs.com.my/images/cinema%20background.jpg')",
-                            }}
+                            className="w-full sm:w-3/4 md:w-2/3 max-w-4xl bg-slate-900/80 border border-slate-800 backdrop-blur-xl p-6 sm:p-8 rounded-3xl shadow-2xl space-y-6 relative z-10"
                         >
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <input
@@ -473,21 +486,21 @@ const AddMovie: React.FC = () => {
                                     value={form.name}
                                     onChange={handleInputChange}
                                     placeholder="Tên phim"
-                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300 w-full"
+                                    className="p-3.5 border border-slate-700 rounded-xl bg-slate-950/50 text-white font-medium placeholder-slate-500 w-full focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
                                 />
                                 <input
                                     name="director"
                                     value={form.director}
                                     onChange={handleInputChange}
                                     placeholder="Đạo diễn"
-                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300 w-full"
+                                    className="p-3.5 border border-slate-700 rounded-xl bg-slate-950/50 text-white font-medium placeholder-slate-500 w-full focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
                                 />
                                 <input
                                     name="actor"
                                     value={form.actor}
                                     onChange={handleInputChange}
                                     placeholder="Diễn viên"
-                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300 w-full"
+                                    className="p-3.5 border border-slate-700 rounded-xl bg-slate-950/50 text-white font-medium placeholder-slate-500 w-full focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
                                 />
                                 <input
                                     name="duration"
@@ -495,13 +508,13 @@ const AddMovie: React.FC = () => {
                                     onChange={handleInputChange}
                                     type="number"
                                     placeholder="Thời lượng (phút)"
-                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300 w-full"
+                                    className="p-3.5 border border-slate-700 rounded-xl bg-slate-950/50 text-white font-medium placeholder-slate-500 w-full focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
                                 />
                                 <select
                                     name="languageId"
                                     value={form.languageId}
                                     onChange={handleInputChange}
-                                    className="p-2 border rounded bg-transparent text-slate-300 font-normal w-full"
+                                    className="p-3.5 border border-slate-700 rounded-xl bg-slate-950/50 text-slate-300 font-normal w-full focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
                                 >
                                     <option className="text-black bg-slate-600" value="">
                                         Chọn ngôn ngữ gốc
@@ -516,11 +529,13 @@ const AddMovie: React.FC = () => {
                                         </option>
                                     ))}
                                 </select>
+
+                                {/* ĐÃ SỬA: Sửa lại phần map dữ liệu cho độ tuổi */}
                                 <select
                                     name="ageId"
                                     value={form.ageId}
                                     onChange={handleInputChange}
-                                    className="p-2 border rounded bg-transparent text-slate-300 font-normal w-full"
+                                    className="p-3.5 border border-slate-700 rounded-xl bg-slate-950/50 text-slate-300 font-normal w-full focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
                                 >
                                     <option className="text-black bg-slate-600" value="">
                                         Chọn độ tuổi
@@ -529,10 +544,10 @@ const AddMovie: React.FC = () => {
                                         ageOptions.map((age, index) => (
                                             <option
                                                 key={index}
-                                                value={age}
+                                                value={age.value} // Gửi mã (Vd: T13)
                                                 className="text-black bg-slate-600"
                                             >
-                                                {age}
+                                                {age.label} {/* Hiển thị text dài (Vd: T13 (Từ 13 tuổi trở lên)) */}
                                             </option>
                                         ))
                                     ) : (
@@ -541,8 +556,9 @@ const AddMovie: React.FC = () => {
                                         </option>
                                     )}
                                 </select>
-                                <div className="flex flex-row rounded border py-2 px-2 w-full">
-                                    <p className="border-e-2 pr-3 text-slate-300 shrink-0">Chọn poster phim</p>
+
+                                <div className="flex flex-row rounded-xl border border-slate-700 bg-slate-950/50 py-2 px-3 w-full items-center">
+                                    <p className="border-r border-slate-700 pr-3 text-slate-400 shrink-0 text-sm">Poster</p>
                                     <input
                                         name="image"
                                         type="file"
@@ -550,8 +566,8 @@ const AddMovie: React.FC = () => {
                                         className="pl-3 bg-transparent text-slate-300 file:hidden w-full"
                                     />
                                 </div>
-                                <div className="flex flex-row rounded border py-2 px-2 w-full">
-                                    <p className="border-e-2 pr-3 text-slate-300 shrink-0">Chọn thời gian ra mắt</p>
+                                <div className="flex flex-row rounded-xl border border-slate-700 bg-slate-950/50 py-2 px-3 w-full items-center">
+                                    <p className="border-r border-slate-700 pr-3 text-slate-400 shrink-0 text-sm">Ra mắt</p>
                                     <input
                                         name="releaseDate"
                                         value={form.releaseDate}
@@ -566,7 +582,7 @@ const AddMovie: React.FC = () => {
                                     value={form.trailer}
                                     onChange={handleInputChange}
                                     placeholder="Chèn URL Trailer"
-                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300 col-span-1 sm:col-span-2 w-full"
+                                    className="p-3.5 border border-slate-700 rounded-xl bg-slate-950/50 text-white font-medium placeholder-slate-500 col-span-1 sm:col-span-2 w-full focus:outline-none focus:border-purple-500 transition-all"
                                 />
                                 <textarea
                                     name="description"
@@ -574,12 +590,12 @@ const AddMovie: React.FC = () => {
                                     onChange={handleInputChange}
                                     rows={5}
                                     placeholder="Mô tả phim"
-                                    className="p-2 border rounded col-span-1 sm:col-span-2 bg-transparent placeholder:font-normal placeholder:text-slate-300 font-medium text-white w-full"
+                                    className="p-3.5 border border-slate-700 rounded-xl col-span-1 sm:col-span-2 bg-slate-950/50 placeholder-slate-500 font-medium text-white w-full focus:outline-none focus:border-purple-500 transition-all resize-none"
                                 />
                             </div>
 
                             <div className="space-y-4">
-                                <label className="block text-white font-semibold">Thể loại</label>
+                                <label className="block text-slate-400 font-bold uppercase tracking-wider text-sm">Thể loại</label>
                                 <div className="flex flex-wrap gap-2 mt-2">
                                     {selectedGenres.length > 0 ? (
                                         selectedGenres.map((id) => {
@@ -587,10 +603,11 @@ const AddMovie: React.FC = () => {
                                             return (
                                                 <span
                                                     key={id}
-                                                    className="bg-slate-500 px-3 py-1 rounded text-white flex items-center"
+                                                    className="bg-purple-600/30 border border-purple-500/50 px-3 py-1.5 rounded-lg text-purple-200 flex items-center text-sm font-semibold"
                                                 >
                                                     {genre?.genreName || "Unknown Genre"}
                                                     <button
+                                                        type="button" // Thêm type="button" để tránh vô tình submit form
                                                         className="text-yellow-300 ml-2"
                                                         onClick={() =>
                                                             setSelectedGenres((prev) => prev.filter((gid) => gid !== id))
@@ -607,7 +624,7 @@ const AddMovie: React.FC = () => {
                                 </div>
                                 <select
                                     onChange={handleGenreChange}
-                                    className="w-full p-2 border rounded bg-transparent text-white"
+                                    className="w-full p-3.5 border border-slate-700 rounded-xl bg-slate-950/50 text-slate-300 focus:outline-none focus:border-purple-500 transition-all"
                                 >
                                     <option className="text-black bg-slate-600" value="">
                                         -- Chọn thể loại --
@@ -636,168 +653,90 @@ const AddMovie: React.FC = () => {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className={`cursor-pointer bg-gradient-to-b from-indigo-500 to-indigo-600 shadow-[0px_4px_32px_0_rgba(99,102,241,.70)] px-6 py-3 rounded-xl border-[1px] border-slate-500 text-white font-medium group ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+                                    className={`w-full md:w-auto px-10 py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg hover:shadow-purple-500/30 transform hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wider ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                                 >
-                                    <div className="relative overflow-hidden">
-                                        <p className="group-hover:-translate-y-7 duration-[1.125s] ease-[cubic-bezier(0.19,1,0.22,1)]">
-                                            {editIndex !== null ? "Cập nhật" : isSubmitting ? <div className="flex-col gap-4 w-full flex items-center justify-center">
-                                                <div
-                                                    className="w-20 h-20 border-4 border-transparent text-blue-400 text-4xl animate-spin flex items-center justify-center border-t-blue-400 rounded-full"
-                                                >
-                                                    <div
-                                                        className="w-16 h-16 border-4 border-transparent text-red-400 text-2xl animate-spin flex items-center justify-center border-t-red-400 rounded-full"
-                                                    ></div>
-                                                </div>
-                                            </div> : "Thêm phim"}
-                                        </p>
-                                        <p className="absolute top-7 left-0 group-hover:top-0 duration-[1.125s] ease-[cubic-bezier(0.19,1,0.22,1)]">
-                                            {editIndex !== null ? "Cập nhật" : isSubmitting ? "Đang thêm..." : "Thêm phim"}
-                                        </p>
-                                    </div>
+                                    {editIndex !== null ? "Cập nhật phim" : isSubmitting ? "Đang xử lý..." : "Thêm phim"}
                                 </button>
                             </div>
-                            {loi && <p className="text-red-500 text-center">{loi}</p>}
-                            {thanhCong && <p className="text-green-500 text-center">{thanhCong}</p>}
+                            {loi && <p className="text-red-400 bg-red-500/10 border border-red-500/30 p-3 rounded-xl text-center font-medium">{loi}</p>}
+                            {thanhCong && <p className="text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl text-center font-medium">{thanhCong}</p>}
                         </div>
                     </div>
                 </form>
 
                 <div className="mt-10 px-4 sm:px-10">
-                    <h3 className="text-2xl sm:text-3xl font-semibold text-white mb-4 text-center sm:text-left">Danh sách phim</h3>
-                    {loading && editIndex === null ? ( // Chỉ hiển thị loading chính khi không ở chế độ edit
-                        <p className="text-white text-center">Đang tải...</p>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-500 mb-6 text-center sm:text-left tracking-wide">Danh sách phim</h3>
+                    {loading && editIndex === null ? (
+                        <p className="text-slate-400 text-center text-lg">Đang tải...</p>
                     ) : loi && movies.length === 0 ? (
                         <p className="text-red-500 text-center">{loi}</p>
                     ) : movies.length === 0 ? (
-                        <p className="text-white text-center">Chưa có phim nào</p>
+                        <p className="text-slate-400 text-center text-lg">Chưa có phim nào</p>
                     ) : (
                         <>
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto bg-slate-900/80 border border-slate-800 backdrop-blur-xl p-6 rounded-3xl shadow-2xl relative z-10">
                                 <table
-                                    className="w-full backdrop-blur-md p-6 rounded-xl shadow-xl space-y-4 relative z-10"
-                                    style={{
-                                        backgroundImage: "url('https://www.lfs.com.my/images/cinema%20background.jpg')",
-                                    }}
+                                    className="w-full text-left border-collapse"
                                 >
-                                    <thead className="bg-slate-600 text-white text-sm sm:text-base">
+                                    <thead className="bg-slate-800/80 text-purple-400 text-sm tracking-wider uppercase border-b border-slate-700">
                                         <tr>
-                                            <th className="px-2 sm:px-4 py-2">STT</th>
-                                            <th className="px-2 sm:px-4 py-2">Poster</th>
-                                            <th className="px-2 sm:px-4 py-2 w-48 sm:w-72">Tên</th>
-                                            <th className="px-2 sm:px-4 py-2">Thể loại</th>
-                                            <th className="px-2 sm:px-4 py-2">Trailer</th>
-                                            <th className="px-2 sm:px-4 py-2">Ngày ra mắt</th>
-                                            <th className="px-2 sm:px-4 py-2">Ngôn ngữ</th>
-                                            <th className="px-2 sm:px-4 py-2">Hành động</th>
+                                            <th className="p-4 border-b border-slate-700">STT</th>
+                                            <th className="p-4 border-b border-slate-700">Poster</th>
+                                            <th className="p-4 border-b border-slate-700 w-48 sm:w-72">Tên</th>
+                                            <th className="p-4 border-b border-slate-700">Thể loại</th>
+                                            <th className="p-4 border-b border-slate-700">Trailer</th>
+                                            <th className="p-4 border-b border-slate-700">Ngày ra mắt</th>
+                                            <th className="p-4 border-b border-slate-700">Ngôn ngữ</th>
+                                            <th className="p-4 border-b border-slate-700 text-center">Hành động</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className="divide-y divide-slate-800/50">
                                         {movies.map((m, i) => (
-                                            <tr key={m.movieId || m.name + i} className="text-center border-b text-sm sm:text-base">
-                                                <td className="text-white px-2 sm:px-4 py-2">{i + 1 + (page - 1) * 1}</td>
-                                                <td className="text-white px-2 sm:px-4 py-2">
+                                            <tr key={m.movieId || m.name + i} className="hover:bg-slate-800/40 transition-colors text-sm sm:text-base border-b border-slate-800/50 last:border-0">
+                                                <td className="p-4 text-slate-300 text-center">{i + 1 + (page - 1) * 1}</td>
+                                                <td className="p-4 text-slate-300">
                                                     {m.image ? (
                                                         <img
                                                             src={m.image}
                                                             alt={m.name}
-                                                            className="w-16 sm:w-20 h-16 sm:h-20 object-cover mx-auto"
+                                                            className="w-16 sm:w-20 h-16 sm:h-20 object-cover rounded-xl shadow-md border border-slate-700 mx-auto"
                                                         />
                                                     ) : (
                                                         <span>Không có poster</span>
                                                     )}
                                                 </td>
-                                                <td className="text-white px-2 sm:px-4 py-2">{m.name || "Không có tên"}</td>
-                                                <td className="text-white px-2 sm:px-4 py-2">
+                                                <td className="p-4 text-slate-200 font-bold">{m.name || "Không có tên"}</td>
+                                                <td className="p-4 text-slate-400">
                                                     {m.genres?.length > 0 ? m.genres.join(", ") : "Không có thể loại"}
                                                 </td>
-                                                <td className="text-white px-2 sm:px-4 py-2">
+                                                <td className="p-4 text-center">
                                                     {m.trailer ? (
                                                         <a
                                                             href={m.trailer}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="text-blue-500 hover:underline"
+                                                            className="text-sky-400 hover:text-sky-300 font-semibold"
                                                         >
-                                                            Xem Trailer
+                                                            Trailer ↗
                                                         </a>
                                                     ) : (
                                                         <span>Không có trailer</span>
                                                     )}
                                                 </td>
-                                                <td className="text-white px-2 sm:px-4 py-2">{m.releaseDate || "Không có ngày"}</td>
-                                                <td className="text-white px-2 sm:px-4 py-2">{m.language || "Không có ngôn ngữ"}</td>
-                                                <td className="text-white px-2 sm:px-4 py-2 flex flex-row gap-2 justify-center items-center h-24">
+                                                <td className="p-4 text-slate-400">{m.releaseDate || "Không có ngày"}</td>
+                                                <td className="p-4 text-slate-400">{m.language || "Không có ngôn ngữ"}</td>
+                                                <td className="p-4 flex flex-col sm:flex-row gap-2 justify-center items-center h-full pt-6">
                                                     <button
                                                         onClick={() => handleEdit(i)}
-                                                        className="inline-flex items-center justify-center px-2 sm:px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-md hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all duration-200"
+                                                        className="inline-flex items-center justify-center px-4 py-2 bg-slate-800 border border-slate-600 hover:bg-sky-600 hover:border-sky-500 text-white text-sm font-bold rounded-lg transition-all duration-300 mb-2 sm:mb-0 sm:mr-2"
                                                     >
-                                                        <svg
-                                                            className="h-4 w-4 mr-0.5 self-center items-center"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                        >
-                                                            <path
-                                                                d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"
-                                                            ></path>
-                                                        </svg>
                                                         Sửa
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(i)}
-                                                        className="group relative flex h-8 sm:h-10 w-8 sm:w-10 flex-col items-center justify-center overflow-hidden rounded-md border-2 border-red-800 bg-red-400 hover:bg-red-600"
+                                                        className="inline-flex items-center justify-center px-4 py-2 bg-slate-800 border border-slate-600 hover:bg-red-600 hover:border-red-500 text-white text-sm font-bold rounded-lg transition-all duration-300"
                                                     >
-                                                        <svg
-                                                            viewBox="0 0 1.625 1.625"
-                                                            className="absolute -top-5 fill-white delay-100 group-hover:top-4 group-hover:animate-[spin_1.4s] group-hover:duration-1000"
-                                                            height="10"
-                                                            width="10"
-                                                        >
-                                                            <path
-                                                                d="M.471 1.024v-.52a.1.1 0 0 0-.098.098v.618c0 .054.044.098.098.098h.487a.1.1 0 0 0 .098-.099h-.39c-.107 0-.195 0-.195-.195"
-                                                            ></path>
-                                                            <path
-                                                                d="M1.219.601h-.163A.1.1 0 0 1 .959.504V.341A.033.033 0 0 0 .926.309h-.26a.1.1 0 0 0-.098.098v.618c0 .054.044.098.098.098h.487a.1.1 0 0 0 .098-.099v-.39a.033.033 0 0 0-.032-.033"
-                                                            ></path>
-                                                            <path
-                                                                d="m1.245.465-.15-.15a.02.02 0 0 0-.016-.006.023.023 0 0 0-.023.022v.108c0 .036.029.065.065.065h.107a.023.023 0 0 0 .023-.023.02.02 0 0 0-.007-.016"
-                                                            ></path>
-                                                        </svg>
-                                                        <svg
-                                                            width="10"
-                                                            fill="none"
-                                                            viewBox="0 0 39 7"
-                                                            className="origin-right duration-500 group-hover:rotate-90"
-                                                        >
-                                                            <line stroke-width="3" stroke="white" y2="5" x2="39" y1="5"></line>
-                                                            <line
-                                                                stroke-width="2"
-                                                                stroke="white"
-                                                                y2="1.5"
-                                                                x2="26.0357"
-                                                                y1="1.5"
-                                                                x1="12"
-                                                            ></line>
-                                                        </svg>
-                                                        <svg
-                                                            width="10"
-                                                            fill="none"
-                                                            viewBox="0 0 33 39"
-                                                            className=""
-                                                        >
-                                                            <mask fill="white" id="path-1-inside-1_8_19">
-                                                                <path
-                                                                    d="M0 0H33V35C33 37.2091 31.2091 39 29 39H4C1.79086 39 0 37.2091 0 35V0Z"
-                                                                ></path>
-                                                            </mask>
-                                                            <path
-                                                                mask="url(#path-1-inside-1_8_19)"
-                                                                fill="white"
-                                                                d="M0 0H33H0ZM37 35C37 39.4183 33.4183 43 29 43H4C-0.418278 43 -4 39.4183 -4 35H4H29H37ZM4 43C-0.418278 43 -4 39.4183 -4 35V0H4V35V43ZM37 0V35C37 39.4183 33.4183 43 29 43V35V0H37Z"
-                                                            ></path>
-                                                            <path stroke-width="3" stroke="white" d="M12 6L12 29"></path>
-                                                            <path stroke-width="3" stroke="white" d="M21 6V29"></path>
-                                                        </svg>
+                                                        Xóa
                                                     </button>
                                                 </td>
                                             </tr>
@@ -809,27 +748,17 @@ const AddMovie: React.FC = () => {
                                 <button
                                     onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                                     disabled={page === 1}
-                                    className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md bg-transparent backdrop-blur-lg px-4 sm:px-6 py-2 text-sm sm:text-base text-white transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl hover:shadow-blue-600/50 border border-white/20"
+                                    className="px-6 py-2.5 bg-slate-800 text-slate-300 font-bold border border-slate-700 rounded-xl hover:bg-slate-700 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <span>Trang trước</span>
-                                    <div
-                                        className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]"
-                                    >
-                                        <div className="relative h-full w-10 bg-white/30"></div>
-                                    </div>
+                                    Trang trước
                                 </button>
-                                <span className="px-4 py-2 text-white text-sm sm:text-lg">Trang {page} / {totalPages}</span>
+                                <span className="px-6 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-purple-400 font-bold text-sm sm:text-base shadow-inner">Trang {page} / {totalPages}</span>
                                 <button
                                     onClick={() => setPage((prev) => prev + 1)}
                                     disabled={page === totalPages}
-                                    className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md bg-transparent backdrop-blur-lg px-4 sm:px-6 py-2 text-sm sm:text-base text-white transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl hover:shadow-blue-600/50 border border-white/20"
+                                    className="px-6 py-2.5 bg-slate-800 text-slate-300 font-bold border border-slate-700 rounded-xl hover:bg-slate-700 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <span>Trang sau</span>
-                                    <div
-                                        className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]"
-                                    >
-                                        <div className="relative h-full w-10 bg-white/30"></div>
-                                    </div>
+                                    Trang sau
                                 </button>
                             </div>
                         </>
@@ -837,38 +766,24 @@ const AddMovie: React.FC = () => {
                 </div>
 
                 {showConfirm && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-                        <div className="group select-none w-[250px] flex flex-col p-4 relative items-center justify-center bg-gray-800 border border-gray-800 shadow-lg rounded-2xl">
+                    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl w-full max-w-sm relative animate-fade-in-up">
                             <div className="text-center p-3 flex-auto justify-center">
-                                <svg
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                    className="group-hover:animate-bounce w-12 h-12 flex items-center text-gray-600 fill-red-500 mx-auto"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        clipRule="evenodd"
-                                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                        fillRule="evenodd"
-                                    ></path>
-                                </svg>
-                                <h2 className="text-xl font-bold py-4 text-gray-200">Bạn chắc chắn chứ?</h2>
-                                <p className="text-xl font-bold py-4 text-gray-200">Suy nghĩ kĩ nha bro ☺️</p>
-                                <p className="font-bold text-sm text-gray-500 px-2">
-                                    Bạn có chắc chắn muốn xóa phim này? </p>
+                                <h2 className="text-2xl font-bold py-4 text-white">Xác nhận xóa?</h2>
+                                <p className="text-slate-400 px-2 text-sm">Bạn có chắc chắn muốn xóa phim này khỏi hệ thống?</p>
                             </div>
-                            <div className="p-2 mt-2 text-center space-x-1 md:block">
-                                <button
-                                    onClick={confirmDelete}
-                                    className="bg-red-500 hover:bg-transparent px-5 ml-4 py-2 text-sm shadow-sm hover:shadow-lg font-medium tracking-wider border-2 border-red-500 hover:border-red-500 text-white hover:text-red-500 rounded-full transition ease-in duration-300"
-                                >
-                                    Xóa
-                                </button>
+                            <div className="p-2 mt-4 text-center space-x-3 flex justify-center">
                                 <button
                                     onClick={cancelDelete}
-                                    className="mb-2 md:mb-0 bg-gray-700 px-5 py-2 text-sm shadow-sm font-medium tracking-wider border-2 border-gray-600 hover:border-gray-700 text-gray-300 rounded-full hover:shadow-lg hover:bg-gray-800 transition ease-in duration-300"
+                                    className="px-6 py-2.5 bg-slate-800 text-slate-300 border border-slate-700 rounded-xl hover:bg-slate-700 font-bold transition-colors"
                                 >
                                     Hủy
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="px-6 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-500 font-bold shadow-lg shadow-red-500/30 transition-all"
+                                >
+                                    Xóa ngay
                                 </button>
                             </div>
                         </div>
@@ -876,6 +791,7 @@ const AddMovie: React.FC = () => {
                 )}
             </main>
             <Bottom />
+            </div>
         </div>
     );
 };

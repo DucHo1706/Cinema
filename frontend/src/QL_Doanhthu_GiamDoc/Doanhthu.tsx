@@ -114,7 +114,7 @@ const RevenueList: React.FC = () => {
       }
 
       const data = await response.json();
-      
+
       // LOG TOÀN BỘ PHẢN HỒI CỦA API
       console.log('API Response (Detail):', data);
 
@@ -144,155 +144,17 @@ const RevenueList: React.FC = () => {
     : revenues;
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', margin: '20px', backgroundColor: 'white', padding: '20px' }}>
-      <style>
-        {`
-          .button2 {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease-in;
-            position: relative;
-            overflow: hidden;
-            z-index: 1;
-            color: #000;
-            padding: 0.7em 1.7em;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: 500;
-            border-radius: 0.5em;
-            background: #CAFF38; /* Changed from #ddd to lightgreen */
-            border: 1px solid #CAFF38; /* Changed from #ddd to lightgreen for consistency */
-            text-align: center;
-          }
+    <div className="bg-slate-900/80 border border-slate-800 backdrop-blur-xl p-8 rounded-3xl shadow-2xl">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400 tracking-wide uppercase">Doanh Thu Rạp</h1>
+        <button className="px-6 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold rounded-xl shadow-lg transition-all" onClick={fetchRevenue}>Làm Mới Dữ Liệu 🔄</button>
+      </div>
 
-          .button2:active {
-            color: #666;
-            box-shadow: inset 4px 4px 12px #c5c5c5, inset -4px -4px 12px #044119;
-          }
-
-          .button2:hover {
-            color: #ffffff;
-            background-color: #7e57c2;
-            border: 1px solid #7e57c2;
-          }
-
-          /* Provided CSS for uiverse-pixel-input */
-          .uiverse-pixel-input-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5em;
-            font-family: "Courier New", monospace; /* This font applies to the input wrapper, not the label directly */
-            color: #fff;
-            font-size: 1em;
-            width: 100%; /* Adjusted for responsiveness */
-            max-width: 18em; /* Original max width */
-          }
-
-          .uiverse-pixel-label {
-            text-shadow: 1px 1px #000;
-            font-weight: bold;
-            letter-spacing: 0.05em;
-            color: #333; /* Adjusted for better contrast on light background */
-            font-family: Arial, sans-serif; /* Changed to Arial */
-          }
-
-          .uiverse-pixel-input {
-            appearance: none;
-            border: none;
-            padding: 0.6em;
-            font-size: 1em;
-            font-family: "Courier New", monospace;
-            color: #fff;
-            background: #7e57c2;
-            image-rendering: pixelated;
-            box-shadow:
-              0 0 0 0.15em #000,
-              0 0 0 0.3em #fff,
-              0 0 0 0.45em #000,
-              0 0.3em 0 0 #5e35b1,
-              0 0.3em 0 0.15em #000;
-            outline: none;
-            transition: all 0.15s steps(1);
-            text-shadow: 1px 1px #000;
-            width: 100%; /* Ensure it takes full width of its wrapper */
-          }
-          
-          .uiverse-pixel-input::placeholder {
-            color: #fff;
-            opacity: 0.6;
-          }
-
-          .uiverse-pixel-input:focus {
-            background: #9575cd;
-            box-shadow:
-              0 0 0 0.15em #000,
-              0 0 0 0.3em #fff,
-              0 0 0 0.45em #000,
-              0 0.2em 0 0 #7e57c2,
-              0 0.2em 0 0.15em #000;
-          }
-
-          .uiverse-pixel-input:hover {
-            animation: uiverse-glitch-input 0.3s steps(2) infinite;
-          }
-
-          @keyframes uiverse-glitch-input {
-            0% { transform: translate(0); }
-            25% { transform: translate(-1px, 1px); }
-            50% { transform: translate(1px, -1px); }
-            75% { transform: translate(-1px, -1px); }
-            100% { transform: translate(0); }
-          }
-          
-          .modal {
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-
-          .modal-content {
-            background-color: #fefefe;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            position: relative;
-          }
-
-          .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-          }
-
-          .close:hover,
-          .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-          }
-        `}
-      </style>
-      <h1>Danh sách doanh thu</h1>
-      <button className="button2" onClick={fetchRevenue}>REFRESH</button>
-      
       {/* Áp dụng CSS cho dropdown */}
-      <div className="uiverse-pixel-input-wrapper" style={{ display: 'inline-block', marginLeft: '10px' }}>
-        <label>Chọn rạp:</label>
+      <div className="mb-8 w-full md:w-72">
+        <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Lọc theo rạp:</label>
         <select
-          className="uiverse-pixel-input"
+          className="w-full bg-slate-950/50 text-white border border-slate-700 rounded-xl p-3 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all appearance-none"
           value={selectedCinemaId || ''}
           onChange={(e) => setSelectedCinemaId(e.target.value || null)}
         >
@@ -305,66 +167,74 @@ const RevenueList: React.FC = () => {
         </select>
       </div>
 
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
-        <thead>
-          <tr>
-            <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#f2f2f2', textAlign: 'left' }}>
-              Mã rạp
-            </th>
-            <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#f2f2f2', textAlign: 'left' }}>
-              Tên rạp
-            </th>
-            <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#f2f2f2', textAlign: 'left' }}>
-              Doanh thu
-            </th>
-            <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#f2f2f2', textAlign: 'left' }}>
-              Hành động
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {Array.isArray(filteredRevenues) && filteredRevenues.length > 0 ? (
-            filteredRevenues.map((item, index) => (
-              <tr key={index}>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.baseCinemaInfoRevenue.cinemaId ?? 'N/A'}</td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.baseCinemaInfoRevenue.cinemaName ?? 'N/A'}</td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.totalRevenue ?? 'N/A'}</td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                  <button className="button2" onClick={() => fetchRevenueDetail(item.baseCinemaInfoRevenue.cinemaId)}>Chi tiết</button>
+      {error && <div className="bg-red-500/10 text-red-400 p-4 mb-6 rounded-xl border border-red-500/30">{error}</div>}
+
+      <div className="overflow-x-auto rounded-2xl border border-slate-800">
+        <table className="w-full text-left border-collapse">
+          <thead className="bg-slate-800/80">
+            <tr>
+              <th className="p-4 text-sm font-bold text-amber-400 uppercase tracking-wider border-b border-slate-700">Mã rạp</th>
+              <th className="p-4 text-sm font-bold text-amber-400 uppercase tracking-wider border-b border-slate-700">
+                Tên rạp
+              </th>
+              <th className="p-4 text-sm font-bold text-amber-400 uppercase tracking-wider border-b border-slate-700">
+                Doanh thu
+              </th>
+              <th className="p-4 text-sm font-bold text-amber-400 uppercase tracking-wider border-b border-slate-700">
+                Hành động
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-800/50 bg-slate-950/30">
+            {Array.isArray(filteredRevenues) && filteredRevenues.length > 0 ? (
+              filteredRevenues.map((item, index) => (
+                <tr key={index} className="hover:bg-slate-800/40 transition-colors">
+                  <td className="p-4 text-slate-300 font-medium">{item.baseCinemaInfoRevenue.cinemaId ?? 'N/A'}</td>
+                  <td className="p-4 text-slate-300 font-bold">{item.baseCinemaInfoRevenue.cinemaName ?? 'N/A'}</td>
+                  <td className="p-4 text-emerald-400 font-bold">{item.totalRevenue ? item.totalRevenue.toLocaleString() + ' VNĐ' : 'N/A'}</td>
+                  <td className="p-4">
+                    <button className="px-4 py-1.5 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700 rounded-lg text-sm font-bold transition-colors" onClick={() => fetchRevenueDetail(item.baseCinemaInfoRevenue.cinemaId)}>Xem Chi tiết</button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={4} className="p-8 text-center text-slate-500">
+                  Không có dữ liệu doanh thu
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={4} style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
-                Không có dữ liệu
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Modal hiển thị chi tiết doanh thu */}
       {isDetailModalOpen && detailedRevenue && (
-        <div className="modal">
-          <div className="modal-content">
-            <span className="close" onClick={closeModal}>&times;</span>
-            <h2>Chi tiết doanh thu rạp: {detailedRevenue.baseCinemaInfoRevenue.cinemaName}</h2>
-            <p><strong>Mã rạp:</strong> {detailedRevenue.baseCinemaInfoRevenue.cinemaId}</p>
-            <p><strong>Tổng doanh thu:</strong> {detailedRevenue.totalRevenue}</p>
-            <h3>Doanh thu theo ngày:</h3>
-            {detailedRevenue.baseRevenueInfo.length > 0 ? (
-              <ul>
-                {detailedRevenue.baseRevenueInfo.map((item, index) => (
-                  <li key={index}>
-                    <strong>Ngày:</strong> {new Date(item.date).toLocaleDateString()} - <strong>Doanh thu:</strong> {item.totalAmount}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>Không có dữ liệu doanh thu theo ngày.</p>
-            )}
+        <div className="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-2xl relative animate-fade-in-up">
+            <button className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800 hover:bg-red-600 p-2 rounded-full transition-colors" onClick={closeModal}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h2 className="text-2xl font-bold text-white mb-6 pr-8">Chi tiết doanh thu: <span className="text-amber-400">{detailedRevenue.baseCinemaInfoRevenue.cinemaName}</span></h2>
+            <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-slate-950/50 rounded-xl border border-slate-800">
+              <p className="text-slate-400 text-sm">Mã rạp: <br /><strong className="text-slate-200 text-base">{detailedRevenue.baseCinemaInfoRevenue.cinemaId}</strong></p>
+              <p className="text-slate-400 text-sm">Tổng doanh thu: <br /><strong className="text-emerald-400 text-xl">{detailedRevenue.totalRevenue.toLocaleString()} VNĐ</strong></p>
+            </div>
+            <h3 className="text-lg font-bold text-slate-300 mb-4 uppercase tracking-wider text-sm">Biến động theo ngày</h3>
+            <div className="max-h-60 overflow-y-auto pr-2 rounded-xl border border-slate-800 bg-slate-950/30">
+              {detailedRevenue.baseRevenueInfo.length > 0 ? (
+                <ul className="divide-y divide-slate-800/50">
+                  {detailedRevenue.baseRevenueInfo.map((item, index) => (
+                    <li key={index} className="flex justify-between p-4 hover:bg-slate-800/30 transition-colors">
+                      <span className="text-slate-300">{new Date(item.date).toLocaleDateString('vi-VN')}</span>
+                      <strong className="text-emerald-400">{item.totalAmount.toLocaleString()} đ</strong>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="p-4 text-center text-slate-500">Không có dữ liệu doanh thu theo ngày.</p>
+              )}
+            </div>
           </div>
         </div>
       )}
